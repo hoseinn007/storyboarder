@@ -1,6 +1,14 @@
 const assert = require('assert')
-const { migrate } = require('../../src/js/models/top-plans')
+const { migrate, sortBySceneNumber } = require('../../src/js/models/top-plans')
 describe('Separate top plans collection', () => {
+  it('sorts scene numbers numerically, preserves ties and places unnumbered plans last', () => {
+    const numbered = (uid, sceneNumber) => ({ uid, topPlanDetails: { sceneNumber } })
+    const plans = [{ uid: 'legacy' }, numbered('ten', '10'), numbered('two', '2'),
+      numbered('two-again', '2'), { uid: 'one', sg: { data: { topPlanDetails: { sceneNumber: '1' } } } },
+      numbered('invalid', 'abc')]
+    sortBySceneNumber(plans)
+    assert.deepStrictEqual(plans.map(plan => plan.uid), ['one', 'two', 'two-again', 'ten', 'legacy', 'invalid'])
+  })
   const plan = uid => ({ uid, url: `${uid}.png`, sg: { data: { renderView: 'top-plan' } } })
   it('moves inline plans without changing camera boards, media names, duration, or key points', () => {
     const camera = { uid: 'camera' }

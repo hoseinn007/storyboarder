@@ -1,5 +1,6 @@
 import { connect } from 'react-redux'
-import React, { useMemo, useRef, useCallback, useEffect }  from 'react'
+import React, { useMemo, useRef, useCallback, useEffect, useState }  from 'react'
+import { createPortal } from 'react-dom'
 import {
   // action creators
   selectObject,
@@ -16,6 +17,7 @@ import {
 import SceneObjectCreators from '../../../shared/actions/scene-object-creators'
 
 import Icon from '../Icon'
+import Modal from '../Modal'
 import useTooltip from '../../../hooks/use-tooltip'
 
 import {useServerConnect, SERVER_STATUS} from '../../../services/server'
@@ -78,6 +80,15 @@ const Toolbar = connect(
     let cameraState = null
     let camera = useRef(null)
     let { t } = useTranslation()
+    const [characterNameOpen, setCharacterNameOpen] = useState(false)
+    const [characterName, setCharacterName] = useState('')
+    const characterNameInput = useRef(null)
+
+    useEffect(() => {
+      if (!characterNameOpen) return
+      const frame = requestAnimationFrame(() => characterNameInput.current && characterNameInput.current.focus())
+      return () => cancelAnimationFrame(frame)
+    }, [characterNameOpen])
 
     const roomObject3dFactory = ({ width, height, length }) => {
       let geometry = new THREE.BoxBufferGeometry(
@@ -125,7 +136,7 @@ const Toolbar = connect(
       if(camera.current === null) {
         camera.current = new THREE.PerspectiveCamera(cameraState.fov)
       } else {
-        camera.current.fov = cameraState
+        camera.current.fov = cameraState.fov
         camera.current.updateProjectionMatrix()
       }
       camera.current.position.set(cameraState.x, cameraState.z, cameraState.y)
@@ -154,12 +165,21 @@ const Toolbar = connect(
     }
 
     const onCreateCharacterClick = () => {
+      setCharacterName('')
+      setCharacterNameOpen(true)
+    }
+
+    const onCreateCharacterSubmit = event => {
+      event.preventDefault()
+      const name = characterName.trim()
+      if (!name) return
       let id = THREE.MathUtils.generateUUID()
       initCamera()
       undoGroupStart()
-      createCharacter(id, camera.current, room.visible && roomObject3d)
+      createCharacter(id, camera.current, room.visible && roomObject3d, name)
       selectObject(id)
       undoGroupEnd()
+      setCharacterNameOpen(false)
     }
 
     const onCreateLightClick = () => {
@@ -248,6 +268,42 @@ const Toolbar = connect(
 
     return (
       <div id="toolbar" key="toolbar">
+        {createPortal(<Modal visible={characterNameOpen} onClose={() => setCharacterNameOpen(false)}>
+          <form
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="character-name-label"
+            style={{ color: '#eee', WebkitAppRegion: 'no-drag' }}
+            onSubmit={onCreateCharacterSubmit}
+            onKeyDown={event => {
+              event.stopPropagation()
+              if (event.key === 'Escape') setCharacterNameOpen(false)
+            }}
+          >
+            <label id="character-name-label" htmlFor="new-character-name">
+              {t('shot-generator.toolbar.character.name-label', 'Character name')}
+            </label>
+            <div className="column">
+              <input
+                ref={characterNameInput}
+                id="new-character-name"
+                className="modalInput"
+                type="text"
+                value={characterName}
+                onChange={event => setCharacterName(event.target.value)}
+                required
+              />
+            </div>
+            <div className="skeleton-selector__div">
+              <button type="button" className="skeleton-selector__button" onClick={() => setCharacterNameOpen(false)}>
+                {t('shot-generator.toolbar.character.cancel', 'Cancel')}
+              </button>
+              <button type="submit" className="skeleton-selector__button" disabled={!characterName.trim()}>
+                {t('shot-generator.toolbar.character.add', 'Add Character')}
+              </button>
+            </div>
+          </form>
+        </Modal>, document.body)}
         <div className="toolbar__addition row">
           <a href="#"
              onClick={preventDefault(onCreateCameraClick)}

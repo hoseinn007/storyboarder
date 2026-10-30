@@ -36,6 +36,29 @@ describe('Top Plans Timeline view', () => {
     assert.equal(scene.boards.length, 1)
     assert(view.element.textContent.includes('No top plans yet'))
   })
+  it('sorts by scene number while keeping selection and plays in scene order', () => {
+    scene.topPlans[0].topPlanDetails = { sceneNumber: '10', sceneName: 'Later' }
+    scene.topPlans[1].topPlanDetails = { sceneNumber: '2', sceneName: 'Earlier' }
+    view.show(true)
+    assert.deepStrictEqual(scene.topPlans.map(plan => plan.uid), ['plan2', 'plan1'])
+    assert.strictEqual(view.selected.uid, 'plan1')
+    const played = []
+    view.player.update = plan => played.push(plan.uid)
+    view.play()
+    assert.strictEqual(view.selected.uid, 'plan2')
+    assert.strictEqual(played[0], 'plan2')
+    view.stop()
+    Array.from(view.element.querySelectorAll('button')).find(button => button.textContent === 'Delete top plan').click()
+    assert.deepStrictEqual(scene.topPlans.map(plan => plan.uid), ['plan1'])
+  })
+  it('shows the scene details on the timeline and playback', () => {
+    scene.topPlans[0].topPlanDetails = { sceneNumber: '3', sceneName: 'Kitchen' }
+    view.show(true)
+    assert(view.element.textContent.includes('Scene 3: Kitchen'))
+    view.player.update = () => {}
+    view.play()
+    assert(view.clock.textContent.includes('Scene 3: Kitchen'))
+  })
   it('keeps playback running through control mouse events and advances local time', async () => {
     view.show(true)
     const previous = window.onmousedown

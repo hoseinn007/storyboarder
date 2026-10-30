@@ -7189,6 +7189,7 @@ const saveToTopPlanFromShotGenerator = async ({ uid, data, images }, sourceBoard
   const plans = boardData.topPlans || []
   const previous = plans.find(plan => plan.uid === uid)
   const board = { ...(previous || { uid, url: `top-plan-${uid}.png` }),
+    topPlanDetails: data.topPlanDetails || previous && previous.topPlanDetails,
     duration: data.motion ? data.motion.durationMs : (previous || sourceBoard).duration || boardData.defaultBoardTiming,
     sg: { version: pkg.version, data },
     sourceBoardUid: sourceBoard.uid || previous && previous.sourceBoardUid }
@@ -7215,6 +7216,7 @@ const saveToTopPlanFromShotGenerator = async ({ uid, data, images }, sourceBoard
   saveDataURLtoFile(context.canvas.toDataURL(), boardModel.boardFilenameForThumbnail(board))
   saveDataURLtoFile(context.canvas.toDataURL('image/jpeg', 0.92), layer.thumbnail)
   boardData.topPlans = previous ? plans.map(plan => plan.uid === uid ? board : plan) : [...plans, board]
+  require('../models/top-plans').sortBySceneNumber(boardData.topPlans)
   markBoardFileDirty()
   getTopPlansTimeline().index = boardData.topPlans.findIndex(plan => plan.uid === uid)
   if (activate) showTopPlans(true)

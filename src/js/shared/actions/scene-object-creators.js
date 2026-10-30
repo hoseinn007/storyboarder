@@ -10,7 +10,7 @@ const generatePositionAndRotation = (camera, room) => {
   let distance = 5
 
   if (room) {
-    let vector = camera.getWorldDirection().normalize()
+    let vector = direction.clone().normalize()
     let raycaster = new THREE.Raycaster()
     raycaster.set(camera.position, vector)
     let intersects = raycaster.intersectObject(room)
@@ -90,12 +90,13 @@ const createModelObject = (id, camera, room) => {
   })
 }
 
-const createCharacter = (id, camera, room) => {
+const createCharacter = (id, camera, room, name) => {
   let { x, y, z, rotation } = generatePositionAndRotation(camera, room)
 
   return createObject({
     id,
     type: 'character',
+    ...(name ? { name } : {}),
     height: 1.8,
     model: 'adult-male',
 

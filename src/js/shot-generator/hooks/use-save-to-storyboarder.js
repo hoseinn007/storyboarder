@@ -79,6 +79,7 @@ const renderCameraPlot = (renderer, scene, originalCamera) => {
 }
 
 const { chooseCrop, cropCanvas } = require('../services/crop-top-plan')
+const { chooseTopPlanDetails } = require('../services/top-plan-details')
 const { renderDynamicBoard } = require('../services/render-dynamic-board')
 const { renderTopPlanBoard, getTopPlanBoardBounds } = require('../services/top-plan-board')
 const { isSupported } = require('../../shared/reducers/shot-generator/dynamic-board')
@@ -115,6 +116,7 @@ const saveShot = (insert, shotRenderer, cameraPlotRenderer, largeCanvasData, sma
   let planBounds
   let planCrop
   let relatedTopPlan
+  let topPlanDetails = original.board.topPlanDetails || (original.board.sg && original.board.sg.data && original.board.sg.data.topPlanDetails)
   const needsPlan = insert || renderView === 'top-plan'
   const cancelled = () => getState().motionPlayback.cancelRequested || getState().board.uid !== original.board.uid
   const check = () => {
@@ -122,6 +124,11 @@ const saveShot = (insert, shotRenderer, cameraPlotRenderer, largeCanvasData, sma
     if (getHash(getState()) !== hash) throw new Error('The scene changed while rendering. Please save again.')
   }
   try {
+    if (insert && needsPlan) {
+      dispatch(setMotionPlayback({ playing: false }))
+      topPlanDetails = await chooseTopPlanDetails(topPlanDetails)
+      if (!topPlanDetails || cancelled()) return
+    }
     if (isSupported(motion) && motion.keyPoints.length < 2) throw new Error('Add at least two key points before saving a dynamic board.')
     if (motion && !isSupported(motion)) throw new Error('This dynamic board uses an unsupported motion format.')
     if (needsPlan) planBounds = getTopPlanBoardBounds({ objects: getSceneObjects(original), world: getWorld(original), motion })
@@ -183,6 +190,7 @@ const saveShot = (insert, shotRenderer, cameraPlotRenderer, largeCanvasData, sma
     if (renderView === 'top-plan') {
       data.renderView = 'top-plan'
       data.topPlanCrop = planCrop
+      data.topPlanDetails = topPlanDetails
       renderTopPlanBoard(cameraPlotRenderer.current, smallCanvasData.current.scene, smallCanvasData.current.camera, shotSize,
         { objects: getEvaluatedSceneObjects(getState()), world: getWorld(getState()), motion, bounds: planBounds })
       shotImageDataUrl = cropCanvas(cameraPlotRenderer.current.domElement, planCrop)
@@ -209,7 +217,7 @@ const saveShot = (insert, shotRenderer, cameraPlotRenderer, largeCanvasData, sma
       dispatch(setMotionPlayback({ timeMs: 0, preview: !!motion })); await waitForScene(); check()
       renderTopPlanBoard(cameraPlotRenderer.current, smallCanvasData.current.scene, smallCanvasData.current.camera, shotSize,
         { objects: getEvaluatedSceneObjects(getState()), world: getWorld(getState()), motion, bounds: planBounds })
-      relatedTopPlan = { data: { ...data, renderView: 'top-plan' }, crop: planCrop,
+      relatedTopPlan = { data: { ...data, renderView: 'top-plan', topPlanDetails }, crop: planCrop,
         images: { camera: cropCanvas(cameraPlotRenderer.current.domElement, planCrop), plot: cameraPlotImageDataUrl,
           ...(planVideo ? { video: planVideo } : {}) } }
     }

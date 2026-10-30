@@ -10,4 +10,16 @@ const migrate = scene => {
   scene.boards = scene.boards.filter(board => !isTopPlanBoard(board))
   return true
 }
-module.exports = { migrate }
+// Keep equal scene numbers in insertion order; older unnumbered plans go last.
+const sortBySceneNumber = plans => {
+  const number = plan => {
+    const details = plan.topPlanDetails || (plan.sg && plan.sg.data && plan.sg.data.topPlanDetails)
+    const value = details && Number(details.sceneNumber)
+    return Number.isFinite(value) && value > 0 ? value : Infinity
+  }
+  return plans.sort((a, b) => {
+    const left = number(a), right = number(b)
+    return left === right ? 0 : left < right ? -1 : 1
+  })
+}
+module.exports = { migrate, sortBySceneNumber }

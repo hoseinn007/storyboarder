@@ -513,7 +513,10 @@
           "title": "Add Character",
           "description": "Add a new character in the scene. You can change the pose by dragging the control point spheres around."
         },
-        "title": "Character"
+        "title": "Character",
+        "name-label": "Character name",
+        "cancel": "Cancel",
+        "add": "Add Character"
       },
       "light": {
         "tooltip": {

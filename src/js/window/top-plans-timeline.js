@@ -2,6 +2,8 @@ const path = require('path')
 const { pathToFileURL } = require('url')
 const boardModel = require('../models/board')
 const DynamicBoardPlayback = require('./dynamic-board-playback')
+const topPlanLabel = require('../models/top-plan-label')
+const { sortBySceneNumber } = require('../models/top-plans')
 
 // This view owns its selection and transport; storyboard board indices never change.
 class TopPlansTimeline {
@@ -10,7 +12,7 @@ class TopPlansTimeline {
     this.index = 0
     this.element = document.createElement('div')
     this.element.addEventListener('mousedown', event => event.stopPropagation())
-    this.element.style.cssText = 'display:none;overflow-x:auto;padding:10px;background:#252525;min-height:145px;flex-shrink:0'
+    this.element.style.cssText = 'display:none;overflow-x:auto;padding:10px;background:#252525;color:#eee;min-height:145px;flex-shrink:0'
     document.querySelector('#playback').before(this.element)
     this.preview = document.createElement('div')
     this.preview.style.cssText = 'display:none;position:absolute;inset:0;background:#222;z-index:40'
@@ -35,6 +37,9 @@ class TopPlansTimeline {
   render() {
     const scene = this.getScene()
     const plans = scene.topPlans || []
+    const selected = plans[this.index]
+    sortBySceneNumber(plans)
+    if (selected) this.index = plans.indexOf(selected)
     this.index = Math.max(0, Math.min(this.index, plans.length - 1))
     this.element.replaceChildren()
     const button = (label, action, parent = this.element) => {
@@ -65,11 +70,13 @@ class TopPlansTimeline {
       image.style.cssText = 'width:100%;height:80px;object-fit:contain;cursor:pointer'
       image.onclick = () => { this.stop(); this.index = index; this.render() }
       card.appendChild(image)
-      const label = document.createElement('span'); label.textContent = `Top plan ${index + 1} · `; card.appendChild(label)
+      const label = document.createElement('span'); label.textContent = `${topPlanLabel(plan, index)} · `; card.appendChild(label)
+      card.title = topPlanLabel(plan, index)
       const duration = document.createElement('input')
       duration.type = 'number'; duration.min = '0.1'; duration.step = '0.1'
       duration.value = boardModel.boardDuration(scene, plan) / 1000
-      duration.title = 'Duration in seconds'; duration.style.width = '55px'
+      duration.title = 'Duration in seconds'
+      duration.style.cssText = 'width:55px;color:#eee;background:#333;border:1px solid #777'
       duration.onchange = () => {
         if (Number(duration.value) > 0) { this.stop(); plan.duration = Number(duration.value) * 1000; this.changed() }
       }
@@ -80,7 +87,7 @@ class TopPlansTimeline {
   }
   media(filename) { return pathToFileURL(path.join(path.dirname(this.getFilename()), 'images', filename)).href + '?v=' + Date.now() }
   play() {
-    const plans = this.getScene().topPlans || []
+    const plans = sortBySceneNumber(this.getScene().topPlans || [])
     if (!plans.length) return
     this.stop(); this.index = 0; this.playing = true
     const started = performance.now()
@@ -96,7 +103,7 @@ class TopPlansTimeline {
       if (changed) this.player.stop()
       this.index = index
       if (changed) this.render()
-      this.clock.textContent = `Top plan ${index + 1} · ${(time / 1000).toFixed(1)} s`
+      this.clock.textContent = `${topPlanLabel(plans[index], index)} · ${(time / 1000).toFixed(1)} s`
       this.player.update(plans[index], this.getScene(), this.getFilename(), time)
       this.frame = requestAnimationFrame(tick)
     }
