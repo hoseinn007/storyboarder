@@ -102,7 +102,7 @@ The narrow PeerJS Babel rule permits the installed dependency to build under Web
 
 ### Linked plans and cropping
 
-Inserting a board from Shot Generator opens **Crop top plan** first. Adjust the four trim sliders, reset them, or cancel. Confirming creates the camera board and its related plan in their separate timelines. Dynamic plans use the same crop for every frame. Plans store `sourceBoardUid` to identify their camera board; they remain editable snapshots. The explicit **+ Add top plan to timeline** button also opens this crop window. Use **Play top plans** or the main play control while the Top Plans Timeline is active. Static plans hold for their duration; dynamic plans play their saved overhead clips.
+Inserting a board or adding a top plan from Shot Generator first asks for scene number and name, plan number and name, description, character name, and Static/Dynamic plan type. These details are saved with the plan; scene and plan names appear in its timeline label. Dynamic plans require a Dynamic board with at least two key points. Choosing Static saves a still snapshot. Next, **Crop top plan** opens. Adjust the four trim sliders, reset them, or cancel. Confirming creates the camera board and its related plan in their separate timelines. Dynamic plans use the same crop for every frame. Plans store `sourceBoardUid` to identify their camera board; they remain editable snapshots. The explicit **+ Add top plan to timeline** button also opens this crop window. Use **Play top plans** or the main play control while the Top Plans Timeline is active. Static plans hold for their duration; dynamic plans play their saved overhead clips.
 
 ### Export the Top Plans Timeline as PDF
 

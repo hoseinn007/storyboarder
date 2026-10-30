@@ -109,7 +109,7 @@ const saveShot = (insert, shotRenderer, cameraPlotRenderer, largeCanvasData, sma
   saving = true
   const original = getState()
   const previousPlayback = original.motionPlayback
-  const motion = getMotion(original)
+  let motion = getMotion(original)
   const renderView = forcedView || original.renderView || 'camera'
   const hash = getHash(original)
   let completed = false
@@ -126,8 +126,12 @@ const saveShot = (insert, shotRenderer, cameraPlotRenderer, largeCanvasData, sma
   try {
     if (insert && needsPlan) {
       dispatch(setMotionPlayback({ playing: false }))
-      topPlanDetails = await chooseTopPlanDetails(topPlanDetails)
+      topPlanDetails = await chooseTopPlanDetails({ ...topPlanDetails, planType: motion ? 'dynamic' : 'static' })
       if (!topPlanDetails || cancelled()) return
+      if (topPlanDetails.planType === 'dynamic' && !motion) {
+        throw new Error('Select Dynamic in Board type and add at least two key points before adding a dynamic plan.')
+      }
+      if (topPlanDetails.planType === 'static') motion = null
     }
     if (isSupported(motion) && motion.keyPoints.length < 2) throw new Error('Add at least two key points before saving a dynamic board.')
     if (motion && !isSupported(motion)) throw new Error('This dynamic board uses an unsupported motion format.')
@@ -187,6 +191,10 @@ const saveShot = (insert, shotRenderer, cameraPlotRenderer, largeCanvasData, sma
     let { shotImageDataUrl, cameraPlotImageDataUrl } = renderAll(
       shotRenderer, cameraPlotRenderer, largeCanvasData, smallCanvasData, shotSize, cameraPlotSize, aspectRatio)
     const data = getSerializedState(original)
+    if (insert && topPlanDetails) {
+      data.topPlanDetails = topPlanDetails
+      if (!motion) delete data.motion
+    }
     if (renderView === 'top-plan') {
       data.renderView = 'top-plan'
       data.topPlanCrop = planCrop

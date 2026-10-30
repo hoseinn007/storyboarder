@@ -1,6 +1,11 @@
 const fields = [
   ['sceneNumber', 'Scene number', 'number'],
-  ['sceneName', 'Scene name', 'text']
+  ['sceneName', 'Scene name', 'text'],
+  ['planNumber', 'Plan number', 'number'],
+  ['planName', 'Plan name', 'text'],
+  ['description', 'Description', 'textarea'],
+  ['characterName', 'Character name', 'text'],
+  ['planType', 'Plan type', 'select']
 ]
 
 const chooseTopPlanDetails = (initial = {}) => new Promise(resolve => {
@@ -11,7 +16,7 @@ const chooseTopPlanDetails = (initial = {}) => new Promise(resolve => {
   overlay.setAttribute('aria-label', 'Top plan details')
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:10000;display:flex;align-items:center;justify-content:center;-webkit-app-region:no-drag'
   const form = document.createElement('form')
-  form.style.cssText = 'background:#292929;color:white;padding:24px;width:400px;max-width:90vw'
+  form.style.cssText = 'background:#292929;color:white;padding:24px;width:400px;max-width:90vw;max-height:90vh;overflow-y:auto'
   const heading = document.createElement('h2')
   heading.textContent = 'Top plan details'
   form.appendChild(heading)
@@ -20,13 +25,22 @@ const chooseTopPlanDetails = (initial = {}) => new Promise(resolve => {
     const label = document.createElement('label')
     label.textContent = title
     label.style.cssText = 'display:block;margin:12px 0'
-    const input = document.createElement('input')
-    input.type = type
+    const input = document.createElement(type === 'textarea' || type === 'select' ? type : 'input')
+    if (type === 'select') {
+      for (const value of ['static', 'dynamic']) {
+        const option = document.createElement('option')
+        option.value = value
+        option.textContent = value === 'static' ? 'Static' : 'Dynamic'
+        input.appendChild(option)
+      }
+    } else if (type === 'textarea') {
+      input.rows = 3
+    } else input.type = type
     input.required = true
     input.setAttribute('aria-label', title)
     input.style.cssText = 'display:block;width:100%;box-sizing:border-box;margin-top:5px'
     if (type === 'number') { input.min = '1'; input.step = '1' }
-    input.value = initial[key] || ''
+    input.value = initial[key] || (key === 'planType' ? 'static' : '')
     input.oninput = () => input.setCustomValidity('')
     inputs[key] = input
     label.appendChild(input)
