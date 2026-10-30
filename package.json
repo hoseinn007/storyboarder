@@ -39,7 +39,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/wonderunit/storyboarder.git"
+    "url": "git+https://github.com/hoseinn007/storyboarder.git"
   },
   "keywords": [
     "fountain",
@@ -47,8 +47,8 @@
     "storyboarder"
   ],
   "author": {
-    "email": "charles@wonderunit.com",
-    "name": "Wonder Unit Inc."
+    "email": "hoseinnghorbani@gmail.com",
+    "name": "freelancer"
   },
   "build": {
     "beforeBuild": "scripts/electron-builder-before-build.js",
@@ -163,6 +163,7 @@
     "dotenv": "8.2.0",
     "dotenv-webpack": "^3.0.0",
     "electron": "18.0.2",
+    "electron-builder": "^22.14.13",
     "electron-devtools-installer": "3.1.1",
     "electron-mocha": "^11.0.2",
     "electron-notarize": "^1.1.1",
@@ -243,7 +244,7 @@
     "paper": "0.11.5",
     "pdfjs-dist": "^2.13.216",
     "pdfkit": "^0.13.0",
-    "peerjs": "^1.3.1",
+    "peerjs": "^1.5.5",
     "plist": "2.1.0",
     "postfix-calculator": "0.0.2",
     "promise-cancelable": "2.1.1",

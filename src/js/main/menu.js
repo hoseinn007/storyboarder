@@ -422,7 +422,7 @@ const createMenu = ({ store, send }) => {
       },
       {
         accelerator: keystrokeFor("menu:boards:toggle-new-shot"),
-        label: i18n.t('menu.boards.toggle-board-as-new-shot'),
+        label: "jhgjhg",
         click (item, focusedWindow, event) {
           send('toggleNewShot')
         }

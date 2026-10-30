@@ -15,6 +15,7 @@ import CameraControls from '../../CameraControls'
 
 const CameraControlComponent = connect(
     state => ({
+        preview: state.motionPlayback.preview,
         selections: getSelections(state)
     }),
     {
@@ -23,6 +24,7 @@ const CameraControlComponent = connect(
     }
 )(React.memo(({
     activeCamera,
+    preview,
     pointerDownEvent,
     pointerUpEvent,
     activeGL,
@@ -115,10 +117,10 @@ const CameraControlComponent = connect(
           }
         )
         cameraControlsView.current.camera = camera
-    }, [activeCamera])
+    }, [activeCamera, preview])
 
     useEffect(() => {
-        if(!pointerDownEvent) return
+        if(!pointerDownEvent || preview) return
         let sceneObjects = takeSceneObjects()
         cameraControlsView.current.object = CameraControls.objectFromCameraState(sceneObjects[activeCamera])
         cameraControlsView.current.onPointerDown(pointerDownEvent)
@@ -132,8 +134,8 @@ const CameraControlComponent = connect(
     useEffect(() => {
         if(!cameraControlsView.current) return
         cameraControlsView.current.reset()
-        cameraControlsView.current.enabled = isCameraControlsEnabled
-    }, [isCameraControlsEnabled])
+        cameraControlsView.current.enabled = isCameraControlsEnabled && !preview
+    }, [isCameraControlsEnabled, preview])
 
     useEffect(() => {
         if(!cameraControlsView.current) return
@@ -147,7 +149,7 @@ const CameraControlComponent = connect(
     }, [selections])
 
     useFrame((state, delta) => {
-        if(cameraControlsView.current) {
+        if(cameraControlsView.current && !preview) {
          
           withState((dispatch, state) => {
             cameraControlsView.current.update(delta, state)

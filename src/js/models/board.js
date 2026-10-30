@@ -30,6 +30,11 @@ const boardFilenameForPosterFrame = (board) =>
 const boardFilenameForCameraPlot = (board) =>
   board.url.replace('.png', `-camera-plot.png`)
 
+const isDynamicBoard = board => !!(board && board.sg && board.sg.data &&
+  board.sg.data.motion && board.sg.data.motion.schemaVersion === 1)
+const isTopPlanBoard = board => !!(board && board.sg && board.sg.data && board.sg.data.renderView === 'top-plan')
+const boardFilenameForDynamicVideo = board => `dynamic-${board.uid}.mp4`
+
 // TODO review usage
 // array of fixed size, ordered positions
 const boardOrderedLayerFilenames = board => {
@@ -127,7 +132,7 @@ const getMediaDescription = board => {
         }
       }, {})
       : {},
-    ...(board.sg ? { sg: { plot: boardFilenameForCameraPlot(board) } } : {})
+    ...(board.sg ? { sg: { plot: boardFilenameForCameraPlot(board), ...(isDynamicBoard(board) ? { video: boardFilenameForDynamicVideo(board) } : {}) } } : {})
   }
 }
 
@@ -156,6 +161,9 @@ module.exports = {
   boardFilenameForLayerThumbnail,
   boardFilenameForPosterFrame,
   boardFilenameForCameraPlot,
+  boardFilenameForDynamicVideo,
+  isDynamicBoard,
+  isTopPlanBoard,
   boardOrderedLayerFilenames,
   boardDuration,
   boardDurationWithAudio,

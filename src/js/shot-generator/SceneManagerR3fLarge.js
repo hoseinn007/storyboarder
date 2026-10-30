@@ -9,6 +9,7 @@ import useShadingEffect from './hooks/use-shading-effect'
 import { ShadingType } from '../vendor/shading-effects/ShadingType'
 import { 
     getSceneObjects,
+    getEvaluatedSceneObjects,
     getWorld,
     getSelections,
     getSelectedBone,
@@ -54,7 +55,7 @@ import path from "path"
 import FilepathsContext from './contexts/filepaths'
 
 const sceneObjectSelector = (state) => {
-  const sceneObjects = getSceneObjects(state)
+  const sceneObjects = getEvaluatedSceneObjects(state)
 
   let newSceneObjects = {}
   let keys = Object.keys(sceneObjects)
@@ -75,9 +76,10 @@ const getAttachableIdsM = deepEqualSelector([attachableIdsSelector], (sceneObjec
 const SceneManagerR3fLarge = connect(
     state => ({
         sceneObjects: getSceneObjectsM(state),
+        isMotionPreview: state.motionPlayback.preview,
         world: getWorld(state),
         storyboarderFilePath: state.meta.storyboarderFilePath,
-        selections: getSelections(state),
+        selections: state.motionPlayback.preview ? [] : getSelections(state),
         models: state.models,
         selectedBone: getSelectedBone(state),
         cameraShots: state.cameraShots,
@@ -98,6 +100,7 @@ const SceneManagerR3fLarge = connect(
     }
 )( React.memo(({ 
     sceneObjects,
+    isMotionPreview,
 
     world,
     storyboarderFilePath,
@@ -394,6 +397,7 @@ const SceneManagerR3fLarge = connect(
                 modelSettings={ models[sceneObject.model] }
                 isSelected={ selections.includes(id) } 
                 selectedBone={ selectedBone }
+                isMotionPreview={isMotionPreview}
                 updateCharacterSkeleton={ updateCharacterSkeleton }
                 updateCharacterIkSkeleton={ updateCharacterIkSkeleton }
                 renderData={renderData}

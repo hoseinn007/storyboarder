@@ -9,6 +9,7 @@ const R = require('ramda')
 
 const batchGroupBy = require('./shot-generator/batchGroupBy')
 const serializeSceneObject = require('./shot-generator/serialize-scene-object')
+const { motionReducer, evaluateDynamicBoard, isSupported, isAnimatedObject, seedMotionTargets, recordTransformEdit } = require('./shot-generator/dynamic-board')
 
 const ObjectModelFileDescriptions = require('../../../data/shot-generator/objects/objects.json')
 const AttachablesModelFileDescriptions = require('../../../data/shot-generator/attachables/attachables.json')
@@ -23,6 +24,11 @@ const capitalize = string => string.charAt(0).toUpperCase() + string.slice(1)
 // selectors
 //
 const getSceneObjects = state => state.undoable.present.sceneObjects
+
+const getMotion = state => state.undoable.present.motion
+const getEvaluatedSceneObjects = state => state.motionPlayback && state.motionPlayback.preview
+  ? evaluateDynamicBoard(getSceneObjects(state), getMotion(state), state.motionPlayback.timeMs)
+  : getSceneObjects(state)
 
 const getSceneObjectIds = state => Object.values(state.undoable.present.sceneObjects).map(sceneObject => { return {id: sceneObject.id, type: sceneObject.type} })
 
@@ -47,7 +53,12 @@ const getSerializedState = state => {
   return {
     world: getWorld(state),
     sceneObjects: R.map(serializeSceneObject, getSceneObjects(state)),
-    activeCamera: getActiveCamera(state)
+    activeCamera: getActiveCamera(state),
+    ...(state.renderView === 'top-plan' ? { renderView: 'top-plan', ...(state.topPlanCrop ? { topPlanCrop: state.topPlanCrop } : {}) } : {}),
+    ...(getMotion(state) ? { motion: isSupported(getMotion(state))
+      ? { ...getMotion(state), baseObjects: R.map(serializeSceneObject,
+        R.filter(isAnimatedObject, getSceneObjects(state))) }
+      : getMotion(state) } : {})
   }
 }
 
@@ -673,6 +684,7 @@ const initialState = {
   board: {},
 
   undoable: {
+    motion: null,
     world: initialScene.world,
     activeCamera: initialScene.activeCamera,
     sceneObjects: withDisplayNames(initialScene.sceneObjects),
@@ -693,6 +705,9 @@ const initialState = {
     }
   },
 
+  motionPlayback: { timeMs: 0, playing: false, preview: false, rendering: false, progress: 0 },
+
+  renderView: 'camera',
   mainViewCamera: 'live', // 'ortho' or 'live'
   input: {
     accel: [0, 0, 0],
@@ -900,7 +915,9 @@ const sceneObjectsReducer = (state = {}, action) => {
         return withDisplayNames(
           resetLoadingStatus(
             migrateRotations(
-              action.payload.sceneObjects
+              isSupported(action.payload.motion) && action.payload.motion.baseObjects
+                ? { ...action.payload.sceneObjects, ...action.payload.motion.baseObjects }
+                : action.payload.sceneObjects
             )
           )
         )
@@ -1066,6 +1083,15 @@ const sceneObjectsReducer = (state = {}, action) => {
     
         return withDisplayNames(draft)
 
+      case 'EDIT_MOTION_FRAME':
+        for (const [id, value] of Object.entries(action.payload)) {
+          if (!isAnimatedObject(draft[id])) continue
+          for (const field of ['x', 'y', 'z', 'rotation', 'tilt', 'roll', 'fov', 'visible', 'skeleton', 'handSkeleton', 'posePresetId', 'handPosePresetId']) {
+            if (value[field] !== undefined) draft[id][field] = value[field]
+          }
+        }
+        return
+
       case 'UPDATE_OBJECT':
         if (draft[action.payload.id] == null) return
         updateObject(
@@ -1081,10 +1107,9 @@ const sceneObjectsReducer = (state = {}, action) => {
           if (draft[key] == null) return
 
           if (draft[key].locked) continue
-          draft[key].x = value.x ? value.x : draft[key].x
-          draft[key].y = value.y ? value.y : draft[key].y
-          draft[key].z = value.z ? value.z : draft[key].z
-          draft[key].rotation = value.rotation ? value.rotation : draft[key].rotation 
+          for (const field of ['x', 'y', 'z', 'rotation']) {
+            if (value[field] !== undefined) draft[key][field] = value[field]
+          }
         }
         return
 
@@ -1453,8 +1478,15 @@ const mainReducer = (state/* = initialState*/, action) => {
     draft.lastAction.type = action.type
 
     switch (action.type) {
+      case 'SET_MOTION_PLAYBACK':
+        draft.motionPlayback = { ...draft.motionPlayback, ...action.payload }
+        return
       case 'LOAD_SCENE':
-        draft.mainViewCamera = 'live'
+        draft.motionPlayback = { timeMs: 0, playing: false, preview: false, rendering: false, progress: 0 }
+        draft.topPlanCrop = action.payload.topPlanCrop || null
+        draft.renderView = action.payload.renderView === 'top-plan' ? 'top-plan' : 'camera'
+        draft.motionPlayback.preview = draft.renderView === 'top-plan' && isSupported(action.payload.motion)
+        draft.mainViewCamera = draft.renderView === 'top-plan' ? 'ortho' : 'live'
         return
       case 'UPDATE_SCENE_FROM_XR':
         // don't swap the camera
@@ -1517,9 +1549,18 @@ const mainReducer = (state/* = initialState*/, action) => {
         return
 
       case 'SET_BOARD':
+        draft.motionPlayback = { timeMs: 0, playing: false, preview: false, rendering: false, progress: 0 }
         const { uid, shot, /* action, */ dialogue, notes } = action.payload
+        draft.topPlanCrop = action.payload.sg && action.payload.sg.data && action.payload.sg.data.topPlanCrop || null
+        draft.renderView = action.payload.sg && action.payload.sg.data && action.payload.sg.data.renderView === 'top-plan' ? 'top-plan' : 'camera'
+        if (draft.renderView === 'top-plan') {
+          draft.mainViewCamera = 'ortho'
+          draft.motionPlayback.preview = isSupported(action.payload.sg.data.motion)
+        }
         draft.board = {
           uid,
+          duration: action.payload.duration == null && draft.board.uid === uid ? draft.board.duration : action.payload.duration,
+          fps: action.payload.fps || draft.board.fps || 24,
 
           // used by BoardInspector
           shot,
@@ -1640,7 +1681,8 @@ const filterHistory = (action, currentState, previousHistory) => {
   return true
 }
 
-const undoableReducers = combineReducers({
+const sceneReducers = combineReducers({
+  motion: motionReducer,
   sceneObjects: sceneObjectsReducer,
   activeCamera: activeCameraReducer,
   world: worldReducer,
@@ -1648,6 +1690,14 @@ const undoableReducers = combineReducers({
   selectedBone: selectedBoneReducer,
   selectedAttachable: attachableSelectionsReducer
 })
+
+const undoableReducers = (state, action) => {
+  const next = sceneReducers(state, action)
+  const previousObjects = state && action.type !== 'LOAD_SCENE' ? state.sceneObjects : next.sceneObjects
+  let motion = seedMotionTargets(next.motion, previousObjects, next.sceneObjects)
+  motion = recordTransformEdit(motion, previousObjects, next.sceneObjects, action)
+  return motion === next.motion ? next : { ...next, motion }
+}
 
 const undoableReducer = undoable(
   undoableReducers,
@@ -1674,7 +1724,11 @@ const rootReducer = reduceReducers(
   },
   
   (state, action) => {
-    const undoable = undoableReducer(state.undoable, action)
+    const recordsTransform = ['UPDATE_OBJECT', 'UPDATE_OBJECTS', 'UPDATE_CHARACTER_SKELETON',
+      'UPDATE_CHARACTER_IK_SKELETON'].includes(action.type) &&
+      state.motionPlayback && !state.motionPlayback.preview && !state.motionPlayback.rendering
+    const editAction = recordsTransform ? { ...action, motionTimeMs: state.motionPlayback.timeMs } : action
+    const undoable = undoableReducer(state.undoable, editAction)
   
     return (undoable !== state.undoable) ? { ...state, undoable} : state
   },
@@ -1697,6 +1751,14 @@ const rootReducer = reduceReducers(
 
 module.exports = {
   initialState,
+  getMotion,
+  getEvaluatedSceneObjects,
+  setMotionPlayback: payload => ({ type: 'SET_MOTION_PLAYBACK', payload }),
+  setBoardMotion: payload => ({ type: 'SET_BOARD_MOTION', payload }),
+  setMotionDuration: payload => ({ type: 'SET_MOTION_DURATION', payload }),
+  setMotionKey: payload => ({ type: 'SET_MOTION_KEY', payload }),
+  deleteMotionKey: payload => ({ type: 'DELETE_MOTION_KEY', payload }),
+  moveMotionKey: payload => ({ type: 'MOVE_MOTION_KEY', payload }),
 
   reducer: rootReducer,
 

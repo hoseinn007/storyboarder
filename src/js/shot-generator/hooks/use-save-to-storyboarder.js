@@ -4,6 +4,11 @@ import { ipcRenderer } from 'electron'
 
 import { 
   getSerializedState,
+  getHash,
+  getMotion,
+  getSceneObjects,
+  getEvaluatedSceneObjects,
+  setMotionPlayback,
   getWorld,
 
   selectObject,
@@ -13,6 +18,7 @@ import { ShadingType } from '../../vendor/shading-effects/ShadingType'
 
 import { SHOT_LAYERS } from '../utils/ShotLayers'
 import useShadingEffect from '../hooks/use-shading-effect'
+import { cache as assetCache } from './use-assets-manager'
 
 const renderAll = (
   shotRenderer, cameraPlotRenderer,
@@ -72,69 +78,160 @@ const renderCameraPlot = (renderer, scene, originalCamera) => {
   renderer.render(scene, camera)
 }
 
-const saveCurrentShot = (shotRenderer, cameraPlotRenderer, largeCanvasData, smallCanvasData, shotSize, cameraPlotSize, aspectRatio) => (dispatch, getState) => {
-  let state = getState()
+const { chooseCrop, cropCanvas } = require('../services/crop-top-plan')
+const { renderDynamicBoard } = require('../services/render-dynamic-board')
+const { renderTopPlanBoard, getTopPlanBoardBounds } = require('../services/top-plan-board')
+const { isSupported } = require('../../shared/reducers/shot-generator/dynamic-board')
+const serialize = require('../../shared/reducers/shot-generator/serialize-scene-object')
+const waitForScene = () => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+let saving = false
 
-  // de-select objects so they don't show in the saved image
-  dispatch(selectObject(null))
+const sendSave = (channel, payload) => new Promise((resolve, reject) => {
+  const requestId = THREE.Math.generateUUID()
+  const listener = (event, result) => {
+    if (result.requestId !== requestId) return
+    clearTimeout(timer)
+    ipcRenderer.removeListener('shot-generator:save-result', listener)
+    if (result.error) reject(new Error(result.error))
+    else resolve()
+  }
+  const timer = setTimeout(() => {
+    ipcRenderer.removeListener('shot-generator:save-result', listener)
+    reject(new Error('Storyboarder did not confirm saving the board.'))
+  }, 60000)
+  ipcRenderer.on('shot-generator:save-result', listener)
+  ipcRenderer.send(channel, { ...payload, requestId })
+})
 
-  // HACK slight delay to allow for re-render after the above changes
-  setTimeout(() => {
-    const { shotImageDataUrl, cameraPlotImageDataUrl } = renderAll(
-      shotRenderer, cameraPlotRenderer,
-      largeCanvasData, smallCanvasData,
-      shotSize, cameraPlotSize,
-      aspectRatio
-    )
-
-    let data = getSerializedState(state)
-    let currentBoard = state.board
-    let uid = currentBoard.uid
-
-    ipcRenderer.send('saveShot', {
-      uid,
-      data,
-      images: {
-        camera: shotImageDataUrl,
-        plot: cameraPlotImageDataUrl
+const saveShot = (insert, shotRenderer, cameraPlotRenderer, largeCanvasData, smallCanvasData, shotSize, cameraPlotSize, aspectRatio, forcedView) => async (dispatch, getState) => {
+  if (saving) return
+  saving = true
+  const original = getState()
+  const previousPlayback = original.motionPlayback
+  const motion = getMotion(original)
+  const renderView = forcedView || original.renderView || 'camera'
+  const hash = getHash(original)
+  let completed = false
+  let planBounds
+  let planCrop
+  let relatedTopPlan
+  const needsPlan = insert || renderView === 'top-plan'
+  const cancelled = () => getState().motionPlayback.cancelRequested || getState().board.uid !== original.board.uid
+  const check = () => {
+    if (cancelled()) throw new Error('Dynamic board rendering cancelled.')
+    if (getHash(getState()) !== hash) throw new Error('The scene changed while rendering. Please save again.')
+  }
+  try {
+    if (isSupported(motion) && motion.keyPoints.length < 2) throw new Error('Add at least two key points before saving a dynamic board.')
+    if (motion && !isSupported(motion)) throw new Error('This dynamic board uses an unsupported motion format.')
+    if (needsPlan) planBounds = getTopPlanBoardBounds({ objects: getSceneObjects(original), world: getWorld(original), motion })
+    if (motion) {
+      // The legacy Redux `loaded` flag is not maintained by the current asset
+      // manager. Inspect its cache and the rendered rigs instead.
+      if (Object.values(assetCache.get()).some(asset => asset.status === 'PENDING')) {
+        throw new Error('Wait for the scene assets to finish loading before saving a dynamic board.')
       }
-    })
-
-    dispatch(markSaved())
-  }, 0)
-}
-
-const insertNewShot = (shotRenderer, cameraPlotRenderer, largeCanvasData, smallCanvasData, shotSize, cameraPlotSize, aspectRatio) => (dispatch, getState) => {
-  let state = getState()
-
-  // de-select objects so they don't show in the saved image
-  dispatch(selectObject(null))
-
-  // HACK slight delay to allow for re-render after the above changes
-  setTimeout(() => {
-    // mark as saved, to avoid a prompt that the scene is dirty when the scene reloads
-    dispatch(markSaved())
-
-    const { shotImageDataUrl, cameraPlotImageDataUrl } = renderAll(
-      shotRenderer, cameraPlotRenderer,
-      largeCanvasData, smallCanvasData,
-      shotSize, cameraPlotSize,
-      aspectRatio
-    )
-
-    let data = getSerializedState(state)
-    let currentBoard = state.board
-
-    ipcRenderer.send('insertShot', {
-      data,
-      currentBoard,
-      images: {
-        camera: shotImageDataUrl,
-        plot: cameraPlotImageDataUrl
+      for (const object of Object.values(getSceneObjects(original)).filter(object => object.type === 'character' && renderView !== 'top-plan')) {
+        let ready = false
+        largeCanvasData.current.scene.traverse(node => {
+          if (node.userData.id === object.id && node.getObjectByProperty('type', 'SkinnedMesh')) ready = true
+        })
+        if (!ready) throw new Error('A character model is not ready. Wait for it to load before saving.')
       }
+    }
+    dispatch(selectObject(null))
+    dispatch(setMotionPlayback({ playing: false, rendering: !!motion, cancelRequested: false, progress: 0 }))
+    if (needsPlan) {
+      dispatch(setMotionPlayback({ timeMs: 0, preview: !!motion }))
+      await waitForScene()
+      renderTopPlanBoard(cameraPlotRenderer.current, smallCanvasData.current.scene, smallCanvasData.current.camera, shotSize,
+        { objects: getEvaluatedSceneObjects(getState()), world: getWorld(getState()), motion, bounds: planBounds })
+      if (insert) {
+        planCrop = await chooseCrop(cameraPlotRenderer.current.domElement)
+        if (!planCrop) return
+      } else planCrop = getSerializedState(original).topPlanCrop || original.board.topPlanCrop
+    }
+    let video
+    if (motion) {
+      video = await renderDynamicBoard({
+        durationMs: motion.durationMs, fps: original.board.fps,
+        cancelled,
+        onProgress: progress => dispatch(setMotionPlayback({ progress })),
+        capture: async timeMs => {
+          check()
+          dispatch(setMotionPlayback({ timeMs, preview: true }))
+          await waitForScene()
+          check()
+          if (renderView === 'top-plan') {
+            renderTopPlanBoard(cameraPlotRenderer.current, smallCanvasData.current.scene, smallCanvasData.current.camera, shotSize,
+              { objects: getEvaluatedSceneObjects(getState()), world: getWorld(getState()), motion, bounds: planBounds })
+            return cropCanvas(cameraPlotRenderer.current.domElement, planCrop)
+          }
+          shotRenderer.current.setSize(shotSize.width, shotSize.height)
+          renderShot(shotRenderer.current, largeCanvasData.current.scene, largeCanvasData.current.camera)
+          return shotRenderer.current.domElement.toDataURL('image/png')
+        }
+      })
+      // The first point is the board's still image outside timeline playback.
+      dispatch(setMotionPlayback({ timeMs: 0, preview: true }))
+    }
+    await waitForScene()
+    check()
+    let { shotImageDataUrl, cameraPlotImageDataUrl } = renderAll(
+      shotRenderer, cameraPlotRenderer, largeCanvasData, smallCanvasData, shotSize, cameraPlotSize, aspectRatio)
+    const data = getSerializedState(original)
+    if (renderView === 'top-plan') {
+      data.renderView = 'top-plan'
+      data.topPlanCrop = planCrop
+      renderTopPlanBoard(cameraPlotRenderer.current, smallCanvasData.current.scene, smallCanvasData.current.camera, shotSize,
+        { objects: getEvaluatedSceneObjects(getState()), world: getWorld(getState()), motion, bounds: planBounds })
+      shotImageDataUrl = cropCanvas(cameraPlotRenderer.current.domElement, planCrop)
+    }
+    if (motion) {
+      const evaluated = getEvaluatedSceneObjects(getState())
+      data.sceneObjects = Object.keys(evaluated).reduce((result, id) => {
+        result[id] = serialize(evaluated[id])
+        return result
+      }, {})
+    }
+    if (insert && renderView !== 'top-plan') {
+      let planVideo
+      if (motion) {
+        planVideo = await renderDynamicBoard({ durationMs: motion.durationMs, fps: original.board.fps, cancelled,
+          onProgress: progress => dispatch(setMotionPlayback({ progress })),
+          capture: async timeMs => {
+            check(); dispatch(setMotionPlayback({ timeMs, preview: true })); await waitForScene(); check()
+            renderTopPlanBoard(cameraPlotRenderer.current, smallCanvasData.current.scene, smallCanvasData.current.camera, shotSize,
+              { objects: getEvaluatedSceneObjects(getState()), world: getWorld(getState()), motion, bounds: planBounds })
+            return cropCanvas(cameraPlotRenderer.current.domElement, planCrop)
+          } })
+      }
+      dispatch(setMotionPlayback({ timeMs: 0, preview: !!motion })); await waitForScene(); check()
+      renderTopPlanBoard(cameraPlotRenderer.current, smallCanvasData.current.scene, smallCanvasData.current.camera, shotSize,
+        { objects: getEvaluatedSceneObjects(getState()), world: getWorld(getState()), motion, bounds: planBounds })
+      relatedTopPlan = { data: { ...data, renderView: 'top-plan' }, crop: planCrop,
+        images: { camera: cropCanvas(cameraPlotRenderer.current.domElement, planCrop), plot: cameraPlotImageDataUrl,
+          ...(planVideo ? { video: planVideo } : {}) } }
+    }
+    await sendSave(insert ? 'insertShot' : 'saveShot', {
+      uid: original.board.uid, currentBoard: original.board, data, relatedTopPlan, topPlanCrop: planCrop,
+      images: { camera: shotImageDataUrl, plot: cameraPlotImageDataUrl, ...(video ? { video } : {}) }
     })
-  }, 0)
+    completed = true
+    if (getHash({ ...getState(), renderView: original.renderView, topPlanCrop: original.topPlanCrop }) === hash) dispatch(markSaved())
+  } catch (error) {
+    if (!cancelled()) window.alert(`Could not save board: ${error.message}`)
+  } finally {
+    if (getState().board.uid === original.board.uid) {
+      dispatch(setMotionPlayback({ ...previousPlayback, playing: false, rendering: false, cancelRequested: false }))
+    } else if (completed) {
+      dispatch(setMotionPlayback({ rendering: false, playing: false, preview: getState().renderView === 'top-plan' && !!getMotion(getState()), cancelRequested: false }))
+    }
+    saving = false
+  }
 }
+const saveCurrentShot = (...args) => saveShot(false, ...args)
+const insertNewShot = (...args) => saveShot(true, ...args)
 
 const useSaveToStoryboarder = (largeCanvasData, smallCanvasData, aspectRatio, shadingMode, backgroundColor) => {
   const dispatch = useDispatch()
@@ -157,19 +254,26 @@ const useSaveToStoryboarder = (largeCanvasData, smallCanvasData, aspectRatio, sh
     () => dispatch(
       saveCurrentShot(shotRenderer, cameraPlotRenderer, largeCanvasData, smallCanvasData, shotSize, cameraPlotSize, aspectRatio)
     ),
-    []
+    [shotRenderer, cameraPlotRenderer, shotSize, cameraPlotSize, aspectRatio]
+  )
+
+  const insertTopPlanCb = useCallback(
+    () => dispatch(saveShot(true, shotRenderer, cameraPlotRenderer, largeCanvasData, smallCanvasData,
+      shotSize, cameraPlotSize, aspectRatio, 'top-plan')),
+    [shotRenderer, cameraPlotRenderer, shotSize, cameraPlotSize, aspectRatio]
   )
 
   const insertNewShotCb = useCallback(
     () => dispatch(
       insertNewShot(shotRenderer, cameraPlotRenderer, largeCanvasData, smallCanvasData, shotSize, cameraPlotSize, aspectRatio)
     ),
-    []
+    [shotRenderer, cameraPlotRenderer, shotSize, cameraPlotSize, aspectRatio]
   )
 
   return {
     saveCurrentShot: saveCurrentShotCb,
-    insertNewShot: insertNewShotCb
+    insertNewShot: insertNewShotCb,
+    insertTopPlan: insertTopPlanCb
   }
 }
 

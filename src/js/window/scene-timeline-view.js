@@ -497,7 +497,7 @@ class BoardView {
                         }`
               },
               [
-                $.div({ class: 'board__number', style: 'font-weight: 700' }, `${this.board.shot}`),
+                $.div({ class: 'board__number', style: 'font-weight: 700' }, `${this.board.shot}${boardModel.isTopPlanBoard(this.board) ? ' · Top plan' : ''}${boardModel.isDynamicBoard(this.board) ? ' ▶ Dynamic' : ''}`),
                 $.div({ class: 'board__audio' }),
                 $.div({ class: 'board__caption' }, `${this.board.dialogue || ''}`),
                 $.div({ class: 'board__duration' }, `${msToTime(boardModel.boardDuration(this.scene, this.board))}`)

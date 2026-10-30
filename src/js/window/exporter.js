@@ -1,9 +1,8 @@
 const fs = require('fs-extra')
 const path = require('path')
 const GIFEncoder = require('gifencoder')
+const { boardGifFrames } = require('../exporters/gif-frames')
 const moment = require('moment')
-const app = require('@electron/remote').app
-const { dialog } = require('@electron/remote')
 
 const {
   boardFileImageSize,
@@ -13,18 +12,17 @@ const {
 const {
   getImage,
   exportFlattenedBoard,
-  ensureExportsPathExists,
-  flattenBoardToCanvas
+  ensureExportsPathExists
 } = require('../exporters/common')
 
 const exporterFcpX = require('../exporters/final-cut-pro-x')
 const exporterFcp = require('../exporters/final-cut-pro')
 const exporterCleanup = require('../exporters/cleanup')
-const exporterFfmpeg = require('../exporters/ffmpeg')
 const util = require('../utils/index')
 
 class Exporter {
   exportCleanup (boardData, projectFileAbsolutePath) {
+    const { dialog } = require('@electron/remote')
     return new Promise((resolve, reject) => {
       dialog.showMessageBox(
         null,
@@ -174,19 +172,7 @@ class Exporter {
       return lines
     }
 
-    const watermarkImage = await getImage(watermarkSrc)
-
-    const canvases = await Promise.all(
-      boards.map(async (board) =>
-        // returns a Promise
-        flattenBoardToCanvas(
-          board,
-          null,
-          [destSize.width, destSize.height],
-          projectFileAbsolutePath
-        )
-      )
-    )
+    const watermarkImage = mark ? await getImage(watermarkSrc) : null
 
     let encoder = new GIFEncoder(destSize.width, destSize.height)
 
@@ -198,99 +184,120 @@ class Exporter {
       basename + ' ' + moment().format('YYYY-MM-DD hh.mm.ss') + '.gif'
     )
 
-    encoder.createReadStream().pipe(fs.createWriteStream(filepath))
-    encoder.start()
-    encoder.setRepeat(0) // 0 for repeat, -1 for no-repeat
-    encoder.setDelay(boardData.defaultBoardTiming) // frame delay in ms
-    encoder.setQuality(10) // image quality. 10 is default.
-    for (var i = 0; i < boards.length; i++) {
-      let canvas = canvases[i]
-      let context = canvas.getContext('2d')
-      if (mark) {
-        let dst = { width: Math.floor(destSize.width / 4), height: Math.floor(destSize.height / 4) }
-        let src = { width: watermarkImage.width, height: watermarkImage.height }
-        let [x, y, w, h] = util.fitToDst(dst, src)
-        if (
-          src.width <= dst.width &&
-          src.height <= dst.height
-        ) {
-          context.drawImage(
-            watermarkImage,
-            destSize.width - watermarkImage.width,
-            destSize.height - watermarkImage.height
-          )
-        } else {
-          context.drawImage(
-            watermarkImage,
-            destSize.width - w,
-            destSize.height - h,
-            w,
-            h
-          )
-        }
-      }
-      if (boards[i].dialogue) {
-        let text = boards[i].dialogue
-        let fontSize = 22
-        context.font = '300 ' + fontSize + 'px thicccboi, sans-serif'
-        context.textAlign = 'center'
-        context.fillStyle = 'white'
-        context.miterLimit = 1
-        context.lineJoin = 'round'
-        context.lineWidth = 4
-        let lines = fragmentText(context, text, 450)
-
-        let outlinecanvas = document.createElement('canvas')
-        let outlinecontext = outlinecanvas.getContext('2d')
-        outlinecanvas.width = destSize.width
-        outlinecanvas.height = destSize.height
-
-        lines.forEach((line, i) => {
-          let xOffset = (i + 1) * (fontSize + 6) + (destSize.height - ((lines.length + 1) * (fontSize + 6))) - 20
-          let textWidth = context.measureText(line).width / 2
-          outlinecontext.lineWidth = 15
-          outlinecontext.lineCap = 'square'
-          outlinecontext.lineJoin = 'round'
-          outlinecontext.strokeStyle = 'rgba(0,0,0,1)'
-          let padding = 35
-          outlinecontext.fillRect((destWidth / 2) - textWidth - (padding / 2), xOffset - (6) - (padding / 2), textWidth * 2 + padding, padding)
-          outlinecontext.strokeRect((destWidth / 2) - textWidth - (padding / 2), xOffset - (6) - (padding / 2), textWidth * 2 + padding, padding)
-
-          // outlinecontext.beginPath()
-          // outlinecontext.moveTo((destWidth/2)-textWidth, xOffset-(6))
-          // outlinecontext.lineTo((destWidth/2)+textWidth, xOffset-(6))
-          // outlinecontext.stroke()
-        })
-
-        context.globalAlpha = 0.5
-        context.drawImage(outlinecanvas, 0, 0)
+    const source = encoder.createReadStream()
+    const output = fs.createWriteStream(filepath)
+    let writeError
+    output.on('error', error => { writeError = error })
+    const written = new Promise((resolve, reject) => {
+      output.on('finish', resolve)
+      output.on('error', reject)
+      source.on('error', error => output.destroy(error))
+    })
+    // Observe early disk failures while animation frames are being decoded.
+    written.catch(() => {})
+    source.pipe(output)
+    try {
+      encoder.start()
+      encoder.setRepeat(0) // 0 for repeat, -1 for no-repeat
+      encoder.setDelay(boardData.defaultBoardTiming) // frame delay in ms
+      encoder.setQuality(10) // image quality. 10 is default.
+      const frameCanvas = document.createElement('canvas')
+      frameCanvas.width = destSize.width; frameCanvas.height = destSize.height
+      const context = frameCanvas.getContext('2d')
+      for await (const { board, canvas, delay } of boardGifFrames(boards, destSize, projectFileAbsolutePath, boardData)) {
+        if (writeError) throw writeError
         context.globalAlpha = 1
-
-        lines.forEach((line, i) => {
-          let xOffset = (i + 1) * (fontSize + 6) + (destSize.height - ((lines.length + 1) * (fontSize + 6))) - 20
+        context.fillStyle = 'white'
+        context.fillRect(0, 0, destSize.width, destSize.height)
+        context.drawImage(canvas, 0, 0)
+        if (mark) {
+          let dst = { width: Math.floor(destSize.width / 4), height: Math.floor(destSize.height / 4) }
+          let src = { width: watermarkImage.width, height: watermarkImage.height }
+          let [x, y, w, h] = util.fitToDst(dst, src)
+          if (
+            src.width <= dst.width &&
+            src.height <= dst.height
+          ) {
+            context.drawImage(
+              watermarkImage,
+              destSize.width - watermarkImage.width,
+              destSize.height - watermarkImage.height
+            )
+          } else {
+            context.drawImage(
+              watermarkImage,
+              destSize.width - w,
+              destSize.height - h,
+              w,
+              h
+            )
+          }
+        }
+        if (board.dialogue) {
+          let text = board.dialogue
+          let fontSize = 22
+          context.font = '300 ' + fontSize + 'px thicccboi, sans-serif'
+          context.textAlign = 'center'
+          context.fillStyle = 'white'
+          context.miterLimit = 1
+          context.lineJoin = 'round'
           context.lineWidth = 4
-          context.strokeStyle = 'rgba(0,0,0,0.8)'
-          context.strokeText(line.trim(), destWidth / 2, xOffset)
-          context.strokeStyle = 'rgba(0,0,0,0.2)'
-          context.strokeText(line.trim(), destWidth / 2, xOffset + 2)
-          context.fillText(line.trim(), destWidth / 2, xOffset)
-        })
-      }
-      let duration
-      if (boards[i].duration) {
-        duration = boards[i].duration
-      } else {
-        duration = boardData.defaultBoardTiming
-      }
-      encoder.setDelay(duration)
-      encoder.addFrame(context)
-    }
-    encoder.finish()
+          let lines = fragmentText(context, text, 450)
 
-    return filepath
+          let outlinecanvas = document.createElement('canvas')
+          let outlinecontext = outlinecanvas.getContext('2d')
+          outlinecanvas.width = destSize.width
+          outlinecanvas.height = destSize.height
+
+          lines.forEach((line, i) => {
+            let xOffset = (i + 1) * (fontSize + 6) + (destSize.height - ((lines.length + 1) * (fontSize + 6))) - 20
+            let textWidth = context.measureText(line).width / 2
+            outlinecontext.lineWidth = 15
+            outlinecontext.lineCap = 'square'
+            outlinecontext.lineJoin = 'round'
+            outlinecontext.strokeStyle = 'rgba(0,0,0,1)'
+            let padding = 35
+            outlinecontext.fillRect((destWidth / 2) - textWidth - (padding / 2), xOffset - (6) - (padding / 2), textWidth * 2 + padding, padding)
+            outlinecontext.strokeRect((destWidth / 2) - textWidth - (padding / 2), xOffset - (6) - (padding / 2), textWidth * 2 + padding, padding)
+
+            // outlinecontext.beginPath()
+            // outlinecontext.moveTo((destWidth/2)-textWidth, xOffset-(6))
+            // outlinecontext.lineTo((destWidth/2)+textWidth, xOffset-(6))
+            // outlinecontext.stroke()
+          })
+
+          context.globalAlpha = 0.5
+          context.drawImage(outlinecanvas, 0, 0)
+          context.globalAlpha = 1
+
+          lines.forEach((line, i) => {
+            let xOffset = (i + 1) * (fontSize + 6) + (destSize.height - ((lines.length + 1) * (fontSize + 6))) - 20
+            context.lineWidth = 4
+            context.strokeStyle = 'rgba(0,0,0,0.8)'
+            context.strokeText(line.trim(), destWidth / 2, xOffset)
+            context.strokeStyle = 'rgba(0,0,0,0.2)'
+            context.strokeText(line.trim(), destWidth / 2, xOffset + 2)
+            context.fillText(line.trim(), destWidth / 2, xOffset)
+          })
+        }
+        encoder.setDelay(delay)
+        encoder.addFrame(context)
+        // Let the window repaint during long dynamic exports.
+        await new Promise(resolve => setTimeout(resolve, 0))
+      }
+      encoder.finish()
+      await written
+      return filepath
+    } catch (error) {
+      output.destroy(error)
+      await written.catch(() => {})
+      await fs.remove(filepath)
+      throw error
+    }
   }
 
   async exportVideo (scene, sceneFilePath, opts) {
+    const exporterFfmpeg = require('../exporters/ffmpeg')
     let outputPath = ensureExportsPathExists(sceneFilePath)
 
     return await exporterFfmpeg.convertToVideo(

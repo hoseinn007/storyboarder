@@ -55,7 +55,7 @@ const cleanupScene = (absolutePathToStoryboarderFile, trashFn = trash) => {
       //
 
       // ... first, find all used filenames for: layers, thumbnails, links
-      const usedFiles = flatten(boardData.boards.map(boardModel.getMediaFilenames))
+      const usedFiles = flatten([...boardData.boards, ...(boardData.topPlans || [])].map(boardModel.getMediaFilenames))
 
       const allFiles = fs.readdirSync(absolutePathToImagesFolder)
       const unusedFiles = allFiles.filter(filename => !usedFiles.includes(filename))

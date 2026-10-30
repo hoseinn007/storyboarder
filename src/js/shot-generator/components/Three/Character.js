@@ -209,7 +209,7 @@ const Character = React.memo(({ path, sceneObject, modelSettings, isSelected, se
           bone.rotation.z = handBone.rotation.z
         }
       }
-    }, [skeleton, sceneObject.posePresetId, sceneObject.handPosePresetId, ready])
+    }, [skeleton, sceneObject.skeleton, sceneObject.handSkeleton, sceneObject.posePresetId, sceneObject.handPosePresetId, ready])
 
     const bodyScale = useMemo(
       () => sceneObject.height / originalHeight,
@@ -217,6 +217,7 @@ const Character = React.memo(({ path, sceneObject, modelSettings, isSelected, se
     )
 
     useEffect(() => {
+      if (props.isMotionPreview) return
       if(!isFullyUpdate.current)
       {
         withState((dispatch, state) => {
@@ -227,7 +228,7 @@ const Character = React.memo(({ path, sceneObject, modelSettings, isSelected, se
       } else {
         isFullyUpdate.current = false
       }
-    }, [sceneObject.posePresetId, sceneObject.skeleton, skeleton, sceneObject.handPosePresetId])
+    }, [sceneObject.posePresetId, sceneObject.skeleton, skeleton, sceneObject.handPosePresetId, props.isMotionPreview])
 
     const fullyUpdateIkSkeleton = () => {
       if(!ref.current || !skeleton ) return

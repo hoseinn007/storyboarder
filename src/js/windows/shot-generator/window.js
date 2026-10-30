@@ -54,6 +54,7 @@ require("../../shared/helpers/monkeyPatchGrayscale")
 
 const shotExplorerMiddleware = store => next => action => {
   if(!action) return
+  if (action.type === 'SET_MOTION_PLAYBACK') return next(action)
   if(sendedAction !== action) {
     let win = shotExplorer.getWindow()
     if (win && !win.isDestroyed() && !action.type.includes("UNDO")) {
@@ -119,7 +120,7 @@ window.addEventListener('load', () => {
 //   alert(`An error occurred\n\n${message}\n\nin ${source}:${lineno}`)
 // }
 
-const poses = require('../../shared/reducers/shot-generator-presets/poses.json')
+const poses = require('../../shared/reducers/shot-generator-presets/poses')
 
 const store = configureStore({
   ...initialState,
@@ -166,13 +167,14 @@ const preloadData = async () => {
 }
 
 const loadBoard = async (board) => {
-  loadBoardFromData(board, store.dispatch)
+  const { storyboarderFilePath, boardData } = await service.getStoryboarderFileData()
+  loadBoardFromData({ ...board, duration: board.duration == null ? boardData.defaultBoardTiming : board.duration,
+    fps: boardData.fps }, store.dispatch)
   
   if (!board.sg) {
     return false
   }
 
-  const { storyboarderFilePath } = await service.getStoryboarderFileData()
   const {sceneObjects, world} = board.sg.data
 
   await Object.values(sceneObjects)

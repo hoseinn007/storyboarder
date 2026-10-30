@@ -230,6 +230,7 @@ export const unblockObject = (ids) => {
 
 // Redux middleware
 export const SGMiddleware = store => next => action => {
+  if (action.type === 'SET_MOTION_PLAYBACK') return next(action)
   /**
    * Do not send restricted actions such as Object/Attachment selecting, etc.
    * Because of the following reason:

@@ -8,7 +8,7 @@ const shotGeneratorDataModel = require('../models/shot-generator-data')
 const util = require('../utils')
 
 const getRelativeMediaPathsUsedByScene = (scene, options = { copyBoardUrlMainImages: false}) =>
-  R.flatten(scene.boards.map(boardModel.getMediaFilenames))
+  R.flatten([...scene.boards, ...(scene.topPlans || [])].map(boardModel.getMediaFilenames))
 
 const getAllAbsoluteFilePathsUsedByScene = (srcFilePath, options = { copyBoardUrlMainImages: false }) => {
   let srcFolderPath = path.dirname(srcFilePath)
@@ -19,7 +19,7 @@ const getAllAbsoluteFilePathsUsedByScene = (srcFilePath, options = { copyBoardUr
 
   // find all the shot generator files used in the scene
   let shotGeneratorFiles = R.flatten(
-    scene.boards.map(
+    [...scene.boards, ...(scene.topPlans || [])].map(
       board =>
         board.sg == null
           ? []
@@ -31,7 +31,7 @@ const getAllAbsoluteFilePathsUsedByScene = (srcFilePath, options = { copyBoardUr
   // can optionally copy board.url "main layer" images
   let boardUrlMainImages = []
   if (options.copyBoardUrlMainImages) {
-    for (let board of scene.boards) {
+    for (let board of [...scene.boards, ...(scene.topPlans || [])]) {
       let filename = path.join(srcFolderPath, 'images', board.url)
       if (fs.existsSync(filename)) {
         boardUrlMainImages.push(filename)

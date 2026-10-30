@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useCallback } from 'react'
+import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react'
 import { connect } from 'react-redux'
 import * as THREE from 'three'
 import { useTranslation } from 'react-i18next'
@@ -18,12 +18,13 @@ import {
   updateCharacterIkSkeleton
 } from '../../../../shared/reducers/shot-generator'
 
-import defaultPosePresets from '../../../../shared/reducers/shot-generator-presets/poses.json'
+import defaultPosePresets from '../../../../shared/reducers/shot-generator-presets/poses'
 import presetsStorage from '../../../../shared/store/presetsStorage'
 
 import { comparePresetNames, comparePresetPriority } from '../../../utils/searchPresetsForTerms' 
 import { NUM_COLS, ITEM_HEIGHT, CHARACTER_MODEL } from '../../../utils/InspectorElementsSettings'
 import Modal from '../../Modal'
+import PosePicker from '../../PosePicker'
 import { filepathFor } from '../../../utils/filepathFor'
 import deepEqualSelector from './../../../../utils/deepEqualSelector'
 import PosePresetInspectorItem from './PosePresetInspectorItem'
@@ -43,6 +44,7 @@ const PosePresetsEditor = connect(
     attachmentStatus: getAttachmentM(state),
     posePresets: state.presets.poses,
     id: getSelections(state)[0],
+    posePresetId: (getSceneObjects(state)[getSelections(state)[0]] || {}).posePresetId,
     characterPath: filepathFor(CHARACTER_MODEL)
   }),
   {
@@ -57,6 +59,7 @@ const PosePresetsEditor = connect(
 )(
 React.memo(({
   id,
+  posePresetId,
 
   posePresets,
   characterPath,
@@ -70,6 +73,8 @@ React.memo(({
 }) => {
   const { t } = useTranslation()
   const thumbnailRenderer = useRef()
+  const [expanded, setExpanded] = useState(false)
+  useEffect(() => () => { if (thumbnailRenderer.current) thumbnailRenderer.current.dispose() }, [])
 
   const sortedAttachament = useRef([])
   const {asset: attachment} = useAsset(characterPath)
@@ -91,14 +96,6 @@ React.memo(({
     setResult(sortedPoses)
     return sortedPoses
   }, [posePresets])
-
-  const getPosePresetId = () => {
-    let posePresetId
-    withState((dispatch, state) => {
-      posePresetId = getSceneObjects(state)[id].posePresetId
-    })
-    return posePresetId
-  }
 
   const saveFilteredPresets = useCallback(filteredPreset => {
     let objects = []
@@ -250,6 +247,11 @@ React.memo(({
 
   return (
     <React.Fragment>
+    {expanded && <PosePicker presets={presets || []} ItemComponent={PosePresetInspectorItem}
+      onClose={() => setExpanded(false)} itemData={{ id, posePresetId, attachment, thumbnailRenderer,
+        undoGroupStart, undoGroupEnd, onRemoval,
+        updateObject: (targetId, values) => { updateObject(targetId, values); setExpanded(false) }
+      }}/>}
     <Modal visible={ isModalShown } onClose={() => showModal(false)}>
       <div style={{ margin:"5px 5px 5px 5px" }}>
       {t("shot-generator.inspector.common.select-preset-name")} 
@@ -275,6 +277,8 @@ React.memo(({
    <div className="thumbnail-search column">
       <div className="row" style={{ padding: "6px 0" } }> 
         <SearchList label={t("shot-generator.inspector.pose-preset.search-pose")} list={ sortedAttachament.current } onSearch={ saveFilteredPresets }/>
+        <button type="button" className="pose-browser-expand" title="Open larger pose browser" aria-label="Expand pose browser"
+          disabled={!attachment} onClick={() => setExpanded(true)}>⤢</button>
         <div className="column" style={{ marginLeft: 5 }}> 
           <a className="button_add" href="#"
             style={{ width: 30, height: 34 }}
@@ -291,7 +295,7 @@ React.memo(({
             presets: results,
 
             id: id,
-            posePresetId: getPosePresetId(),
+            posePresetId,
 
             attachment,
             updateObject,

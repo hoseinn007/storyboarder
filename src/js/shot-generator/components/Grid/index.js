@@ -51,7 +51,7 @@ const Grid = React.memo(({
     if (index > currentIndex) {
       setCurrentIndex(index)
     }
-  }, 500), [currentIndex])
+  }, 500), [currentIndex, itemHeight, numCols])
 
   useEffect(() => {
     containerRef.current.parentNode.addEventListener('scroll', onParentScroll)
@@ -63,7 +63,7 @@ const Grid = React.memo(({
     return () => {
       if (containerRef.current) containerRef.current.parentNode.removeEventListener('scroll', onParentScroll)
     }
-  }, [containerRef.current, currentIndex])
+  }, [currentIndex, itemHeight, numCols, onParentScroll])
 
   const components = useMemo(() => {
     const result = []
@@ -92,7 +92,7 @@ const Grid = React.memo(({
     }
 
     return result
-  }, [elements.length, itemData, currentIndex])
+  }, [elements, itemData, currentIndex, numCols, itemHeight, itemWidth])
 
   return (
     <div ref={containerRef}>

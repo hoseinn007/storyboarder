@@ -11,7 +11,7 @@ import { useMemo } from 'react'
 import cloneGltf from '../../../helpers/cloneGltf'
 import {patchMaterial} from '../../../helpers/outlineMaterial'
 import RemovableItem from '../RemovableItem/RemovableItem'
-import defaultPosePresets from '../../../../shared/reducers/shot-generator-presets/poses.json'
+import defaultPosePresets from '../../../../shared/reducers/shot-generator-presets/poses'
 let defaultArray = Object.values(defaultPosePresets)
 const isDefaultPreset = (id) => {
   return defaultArray.find(image => image.id === id)
@@ -101,7 +101,7 @@ const setupRenderer = ({ thumbnailRenderer, attachment, preset }) => {
   }
 }
 
-const PosePresetsEditorItem = React.memo(({ style, id, posePresetId, data : preset, updateObject, attachment, thumbnailRenderer, undoGroupStart, undoGroupEnd, onRemoval }) => {
+const PosePresetsEditorItem = React.memo(({ style, id, posePresetId, data : preset, updateObject, attachment, thumbnailRenderer, undoGroupStart, undoGroupEnd, onRemoval, imageWidth = IMAGE_WIDTH, imageHeight = IMAGE_HEIGHT, itemWidth = ITEM_WIDTH, itemHeight = ITEM_HEIGHT }) => {
   const src = path.join(remote.app.getPath('userData'), 'presets', 'poses', `${preset.id}.jpg`)
 
   const onPointerDown = event => {
@@ -152,13 +152,13 @@ const PosePresetsEditorItem = React.memo(({ style, id, posePresetId, data : pres
       onRemoval= { onRemoval }
       data={ preset }
       isRemovable={ !isDefaultPreset(preset.id) }> 
-      <div style={{ width: IMAGE_WIDTH, height: IMAGE_HEIGHT }}>
+      <div style={{ width: imageWidth, height: imageHeight }}>
         <Image src={ src } className="thumbnail"/>
       </div>
       <div className="thumbnail-search__name"
         style={{
-          width: ITEM_WIDTH ,
-          height: ITEM_HEIGHT - IMAGE_HEIGHT - GUTTER_SIZE
+          width: itemWidth,
+          height: itemHeight - imageHeight - GUTTER_SIZE
         }}>
       { preset.name }
       </div>

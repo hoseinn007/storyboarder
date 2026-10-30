@@ -1662,6 +1662,8 @@ menuBus.on('scale-ui-reset',
 
 menuBus.on('saveShot',
   (event, data) => mainWindow.webContents.send('saveShot', data))
+ipcMain.on('saveShot',
+  (event, data) => mainWindow.webContents.send('saveShot', data))
 ipcMain.on('insertShot',
   (event, data) => mainWindow.webContents.send('insertShot', data))
 ipcMain.on('storyboarder:get-boards',
@@ -1702,6 +1704,10 @@ ipcMain.on('shot-generator:open', () => {
   shotGeneratorWindow.show(win => {
     win.webContents.send('shot-generator:reload')
   })
+})
+ipcMain.on('shot-generator:save-result', (event, result) => {
+  const win = shotGeneratorWindow.getWindow()
+  if (win) win.webContents.send('shot-generator:save-result', result)
 })
 ipcMain.on('shot-generator:update', (event, { board }) => {
   let win = shotGeneratorWindow.getWindow()

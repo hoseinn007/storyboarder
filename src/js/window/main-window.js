@@ -358,6 +358,37 @@ const cacheKey = filepath => {
 
 let srcByUid = {} // TODO review, was used for setThumbnailDisplayAsPending, do we still need it?
 let shouldRenderThumbnailDrawer = true
+let topPlansMode = false
+let topPlansTimeline
+const getTopPlansTimeline = () => topPlansTimeline || (topPlansTimeline = new (require('./top-plans-timeline'))({
+  getScene: () => boardData,
+  getFilename: () => boardFilename,
+  changed: () => markBoardFileDirty(),
+  edit: () => ipcRenderer.send('shot-generator:open'),
+  exportPdf: async () => {
+    try {
+      const { canceled, filePath } = await remote.dialog.showSaveDialog(remote.getCurrentWindow(), {
+        title: 'Export Top Plans Timeline as PDF',
+        defaultPath: path.join(path.dirname(boardFilename), path.basename(boardFilename, '.storyboarder') + '-top-plans.pdf'),
+        filters: [{ name: 'PDF', extensions: ['pdf'] }]
+      })
+      if (canceled || !filePath) return
+      const filename = /\.pdf$/i.test(filePath) ? filePath : filePath + '.pdf'
+      await require('../exporters/top-plans-pdf').exportTopPlansPdf(boardData, boardFilename, filename)
+      shell.showItemInFolder(filename)
+      notifications.notify({ message: 'Top Plans Timeline exported as PDF.' })
+    } catch (error) {
+      log.error(error)
+      notifications.notify({ message: 'Could not export top plans: ' + error.message })
+    }
+  }
+}))
+const showTopPlans = active => {
+  stopPlaying()
+  topPlansMode = active
+  getTopPlansTimeline().show(active)
+  renderThumbnailDrawer()
+}
 
 //  analytics.event('Application', 'open', filename)
 
@@ -737,6 +768,14 @@ const migrateStringDurations = () => {
 
 // TODO this is really similar to verifyScene, but verifyScene requires the UI to be ready (for notifications)
 const migrateScene = () => {
+  if (require('../models/top-plans').migrate(boardData)) {
+    if (!boardData.boards.length) {
+      const uid = util.uidGen(5)
+      boardData.boards.push({ uid, url: `board-1-${uid}.png`, layers: {}, newShot: true })
+    }
+    markBoardFileDirty()
+  }
+  if (topPlansTimeline) { topPlansTimeline.stop(); topPlansTimeline.index = 0 }
   // see: https://github.com/wonderunit/storyboarder/issues/2275
   migrateStringDurations()
 
@@ -2223,6 +2262,7 @@ let insertNewBoardDataAtPosition = (position) => {
 }
 
 let newBoard = async (position, shouldAddToUndoStack = true) => {
+  if (topPlansMode) showTopPlans(false)
   // NOTE when loading a script, storyboarderSketchPane will not be initialized yet #1235
   if (storyboarderSketchPane && storyboarderSketchPane.getIsDrawingOrStabilizing()) {
     sfx.error()
@@ -3244,6 +3284,7 @@ let deleteSingleBoard = (index) => {
 }
 
 let deleteBoards = (args)=> {
+  if (topPlansMode) return
   let numDeleted = 0
 
   if (boardData.boards.length > 1) {
@@ -3307,6 +3348,7 @@ let deleteBoards = (args)=> {
  *
  */
 let duplicateBoard = async () => {
+  if (topPlansMode) return
   if (isSavingImageFile) {
     sfx.error()
     // notifications.notify({ message: 'Could not duplicate board. Please wait until Storyboarder has saved all recent image edits.', timing: 5 })
@@ -3341,6 +3383,11 @@ let duplicateBoard = async () => {
             to: boardDst.layers[name].url
           }))
       : []
+
+    if (boardModel.isDynamicBoard(boardSrc)) {
+      filePairs.push({ from: boardModel.boardFilenameForDynamicVideo(boardSrc),
+        to: boardModel.boardFilenameForDynamicVideo(boardDst) })
+    }
 
     // thumbnail
     filePairs.push({
@@ -4782,6 +4829,7 @@ const ensureBoardExists = async () => {
 }
 
 window.onmousedown = (e) => {
+  if (topPlansMode && (e.target.closest('#playback') || (topPlansTimeline && topPlansTimeline.element.contains(e.target)))) return
   stopPlaying()
 }
 
@@ -5010,6 +5058,9 @@ let disableDragMode = () => {
 ///////////////////////////////////////////////////////////////
 const NANOSECONDS_TO_MSECS = BigInt(1e+6)
 
+let dynamicBoardPlayback
+const getDynamicBoardPlayback = () => dynamicBoardPlayback || (dynamicBoardPlayback = new (require('./dynamic-board-playback'))(document.querySelector('#storyboarder-sketch-pane')))
+
 let playbackMode = false
 let playbackStart
 let playbackFrom
@@ -5018,6 +5069,11 @@ let speakingMode = false
 let utter = new SpeechSynthesisUtterance()
 
 const startPlaying = () => {
+  if (topPlansMode) {
+    const timeline = getTopPlansTimeline()
+    if (timeline.playing) { timeline.stop(); timeline.render() } else timeline.play()
+    return
+  }
   playbackMode = true
   playbackStart = process.hrtime.bigint()
   playbackFrom = boardData.boards[currentBoard].time
@@ -5032,10 +5088,12 @@ const startPlaying = () => {
 }
 
 const stopPlaying = () => {
+  if (topPlansTimeline) topPlansTimeline.stop()
   // prevent unnecessary calls
   if (!playbackMode) return
 
   playbackMode = false
+  if (dynamicBoardPlayback) dynamicBoardPlayback.stop()
 
   audioPlayback.stop()
 
@@ -5089,8 +5147,11 @@ const playbackAdvance = async () => {
       playSpeech()
     }
 
+    if (dynamicBoardPlayback) dynamicBoardPlayback.stop()
     await gotoBoard(boardData.boards.indexOf(boardNow))
   }
+
+  if (playbackMode) getDynamicBoardPlayback().update(boardNow, boardData, boardFilename, d - boardNow.time)
 
   // console.log('playbackAdvance', boardNow.number)
   requestAnimationFrame(playbackAdvance)
@@ -5242,6 +5303,15 @@ let cycleViewMode = async (direction = +1) => {
     }
   }
   // storyboarderSketchPane.resize()
+  if (topPlansMode) {
+    document.querySelector('#thumbnail-container').style.display = 'none'
+    document.querySelector('#timeline').style.display = 'none'
+    document.querySelector('#scene-timeline-container').style.display = 'none'
+    document.querySelector('#board-metadata').style.display = 'none'
+  } else {
+    document.querySelector('#scene-timeline-container').style.display = ''
+  }
+  if (topPlansTimeline) topPlansTimeline.show(topPlansMode)
   renderViewMode()
   renderStats()
 }
@@ -5574,7 +5644,11 @@ let copyBoards = async () => {
       // if not multiple, we'll have an image for one board (the current board)
       image,
       // always include boards and layerDataByBoardIndex
-      text: JSON.stringify({ boards, layerDataByBoardIndex }, null, 2)
+      text: JSON.stringify({ boards, layerDataByBoardIndex,
+        dynamicDataByBoardIndex: boards.map(board => {
+          const file = path.join(boardPath, 'images', boardModel.boardFilenameForDynamicVideo(board))
+          return boardModel.isDynamicBoard(board) && fs.existsSync(file) ? fs.readFileSync(file).toString('base64') : null
+        }) }, null, 2)
     }
     clipboard.clear()
     clipboard.write(payload)
@@ -5591,7 +5665,7 @@ let copyBoards = async () => {
 const exportAnimatedGif = async () => {
   log.info('main-window#exportAnimatedGif', selections)
   if (selections.has(currentBoard)) {
-    saveImageFile()
+    await saveImageFile()
   }
   let boards
   if (selections.size === 1) {
@@ -5603,6 +5677,8 @@ const exportAnimatedGif = async () => {
       n => util.stringifyClone(boardData.boards[n])
     )
   }
+  if (topPlansMode) boards = util.stringifyClone(boardData.topPlans || [])
+  if (!boards.length) return
   let boardSize = storyboarderSketchPane.getCanvasSize()
 
   notifications.notify({
@@ -5810,6 +5886,11 @@ let pasteBoards = async () => {
       // copy linked boards
       newBoards.forEach((dst, n) => {
         let src = oldBoards[n]
+
+        const video = pasted.dynamicDataByBoardIndex && pasted.dynamicDataByBoardIndex[n]
+        if (boardModel.isDynamicBoard(dst) && video) {
+          fs.writeFileSync(path.join(boardPath, 'images', boardModel.boardFilenameForDynamicVideo(dst)), Buffer.from(video, 'base64'))
+        }
 
         // NOTE: audio is not copied
 
@@ -6717,10 +6798,12 @@ const TimelineModeControlView = ({ mode = 'sequence', show = false }) => {
   let style = { display: show ? 'flex' : 'none' }
 
   const onBoardsSelect = () => {
+    topPlansMode = false
     shouldRenderThumbnailDrawer = false
     renderThumbnailDrawer()
   }
   const onTimelineSelect = () => {
+    topPlansMode = false
     shouldRenderThumbnailDrawer = true
     renderThumbnailDrawer()
   }
@@ -6738,19 +6821,27 @@ const TimelineModeControlView = ({ mode = 'sequence', show = false }) => {
       ],
       ['div.spacer'],
       ['div.btn', {
-        className: mode !== 'sequence' ? 'selected' : null,
+        className: mode === 'time' ? 'selected' : null,
         onPointerUp: onBoardsSelect
       },
         ['svg', { className: 'icon' },
           ['use', { xlinkHref: './img/symbol-defs.svg#timeline-timeline' }]
         ],
         ['span', 'Timeline']
+      ],
+      ['div.spacer'],
+      ['div.btn', {
+        className: mode === 'top-plans' ? 'selected' : null,
+        onPointerUp: () => showTopPlans(true)
+      },
+        ['svg', { className: 'icon' }, ['use', { xlinkHref: './img/symbol-defs.svg#timeline-timeline' }]],
+        ['span', 'Top Plans Timeline']
       ]
     ]
   )
 }
 const renderTimelineModeControlView = ({ show = false }) => {
-  let mode = shouldRenderThumbnailDrawer ? 'sequence' : 'time'
+  let mode = topPlansMode ? 'top-plans' : shouldRenderThumbnailDrawer ? 'sequence' : 'time'
   ReactDOM.render(
     h([TimelineModeControlView, { mode, show }]),
     document.getElementById('timeline-mode-control-view')
@@ -7094,18 +7185,68 @@ ipcRenderer.on('zoomReset', value => {
   storyboarderSketchPane.zoomCenter(ZOOM_LEVELS[zoomIndex])
 })
 
+const saveToTopPlanFromShotGenerator = async ({ uid, data, images }, sourceBoard = {}, activate = true) => {
+  const plans = boardData.topPlans || []
+  const previous = plans.find(plan => plan.uid === uid)
+  const board = { ...(previous || { uid, url: `top-plan-${uid}.png` }),
+    duration: data.motion ? data.motion.durationMs : (previous || sourceBoard).duration || boardData.defaultBoardTiming,
+    sg: { version: pkg.version, data },
+    sourceBoardUid: sourceBoard.uid || previous && previous.sourceBoardUid }
+  const layer = { url: boardModel.boardFilenameForLayer(board, 'shot-generator'), opacity: 1,
+    thumbnail: boardModel.boardFilenameForLayerThumbnail(board, 'shot-generator') }
+  board.layers = { 'shot-generator': layer }
+  if (data.motion) {
+    if (!images.video) throw new Error('Top-plan playback video is missing.')
+    const filename = path.join(boardPath, 'images', boardModel.boardFilenameForDynamicVideo(board))
+    try {
+      fs.writeFileSync(filename + '.tmp', Buffer.from(images.video, 'base64'))
+      fs.moveSync(filename + '.tmp', filename, { overwrite: true })
+    } finally { fs.removeSync(filename + '.tmp') }
+  }
+  const image = await exporterCommon.getImage(images.camera)
+  saveDataURLtoFile(images.camera, layer.url)
+  saveDataURLtoFile(images.plot, boardModel.boardFilenameForCameraPlot(board))
+  const context = createSizedContext([image.width, image.height])
+  context.drawImage(image, 0, 0)
+  saveDataURLtoFile(context.canvas.toDataURL('image/jpeg', 0.92), boardModel.boardFilenameForPosterFrame(board))
+  const size = getLayerThumbnailSize(boardData.aspectRatio)
+  context.canvas.width = size[0]; context.canvas.height = size[1]
+  context.drawImage(image, 0, 0, size[0], size[1])
+  saveDataURLtoFile(context.canvas.toDataURL(), boardModel.boardFilenameForThumbnail(board))
+  saveDataURLtoFile(context.canvas.toDataURL('image/jpeg', 0.92), layer.thumbnail)
+  boardData.topPlans = previous ? plans.map(plan => plan.uid === uid ? board : plan) : [...plans, board]
+  markBoardFileDirty()
+  getTopPlansTimeline().index = boardData.topPlans.findIndex(plan => plan.uid === uid)
+  if (activate) showTopPlans(true)
+  return board
+}
+
 const saveToBoardFromShotGenerator = async ({ uid, data, images }) => {
+  if ((boardData.topPlans || []).some(plan => plan.uid === uid)) {
+    return saveToTopPlanFromShotGenerator({ uid, data, images })
+  }
   // find the board by id
   let index = boardData.boards.findIndex(b => b.uid === uid)
 
   if (index === -1) {
     log.error(`board with uid ${uid} does not exist`)
     alert('Could not save shot: missing board.')
-    return
+    throw new Error('Could not save shot: missing board.')
   }
 
   // make a reference
   let board = boardData.boards[index]
+
+  if (data.motion && data.motion.schemaVersion === 1) {
+    if (!images.video) throw new Error('Dynamic board playback video is missing.')
+    stopPlaying()
+    const videoPath = path.join(path.dirname(boardFilename), 'images', boardModel.boardFilenameForDynamicVideo(board))
+    const temporaryPath = videoPath + '.tmp'
+    try {
+      fs.writeFileSync(temporaryPath, Buffer.from(images.video, 'base64'))
+      fs.moveSync(temporaryPath, videoPath, { overwrite: true })
+    } finally { fs.removeSync(temporaryPath) }
+  }
 
   // update the board data in place
   boardData.boards[index] = {
@@ -7123,6 +7264,7 @@ const saveToBoardFromShotGenerator = async ({ uid, data, images }) => {
         thumbnail: boardModel.boardFilenameForLayerThumbnail(board, 'shot-generator')
       },
     },
+    ...(data.motion && data.motion.schemaVersion === 1 ? { duration: data.motion.durationMs } : {}),
     // shot generator
     sg: {
       version: pkg.version,
@@ -7194,33 +7336,55 @@ const saveToBoardFromShotGenerator = async ({ uid, data, images }) => {
 
   renderShotGeneratorPanel()
 }
-ipcRenderer.on('saveShot', async (event, { uid, data, images }) => {
-  storeUndoStateForScene(true)
-  await saveToBoardFromShotGenerator({ uid, data, images })
-  storeUndoStateForScene()
-  
-  ipcRenderer.send('shot-generator:update', {
-    board: boardData.boards.find(board => board.uid === uid)
-  })
+ipcRenderer.on('saveShot', async (event, { uid, data, images, requestId }) => {
+  try {
+    storeUndoStateForScene(true)
+    await saveToBoardFromShotGenerator({ uid, data, images })
+    storeUndoStateForScene()
+    renderThumbnailDrawer()
+    renderMetaData()
+    ipcRenderer.send('shot-generator:update', { board: [...boardData.boards, ...(boardData.topPlans || [])].find(board => board.uid === uid) })
+    if (requestId) ipcRenderer.send('shot-generator:save-result', { requestId })
+  } catch (error) {
+    if (requestId) ipcRenderer.send('shot-generator:save-result', { requestId, error: error.message })
+    else alert(error.message)
+  }
 })
-ipcRenderer.on('insertShot', async (event, { data, images, currentBoard }) => {
-  let position = boardData.boards.map(board => board.uid).indexOf(currentBoard.uid);
-  let index = await newBoard(position + 1)
-  await gotoBoard(index)
-
-  let uid = boardData.boards[index].uid
-
-  storeUndoStateForScene(true)
-  await saveToBoardFromShotGenerator({ uid, data, images })
-  storeUndoStateForScene()
-
-  ipcRenderer.send('shot-generator:update', {
-    board: boardData.boards[index]
-  })
+ipcRenderer.on('insertShot', async (event, { data, images, relatedTopPlan, currentBoard: sourceBoard, requestId }) => {
+  try {
+    if (data.renderView === 'top-plan') {
+      const board = await saveToTopPlanFromShotGenerator({ uid: util.uidGen(5), data, images }, sourceBoard)
+      ipcRenderer.send('shot-generator:update', { board })
+      if (requestId) ipcRenderer.send('shot-generator:save-result', { requestId })
+      return
+    }
+    const position = boardData.boards.findIndex(board => board.uid === sourceBoard.uid)
+    if (position === -1) throw new Error('The source board no longer exists.')
+    const index = await newBoard(position + 1)
+    await gotoBoard(index)
+    const uid = boardData.boards[index].uid
+    if (data.renderView === 'top-plan' && !(data.motion && data.motion.schemaVersion === 1) && Number(sourceBoard.duration) > 0) {
+      boardData.boards[index].duration = Number(sourceBoard.duration)
+    }
+    storeUndoStateForScene(true)
+    await saveToBoardFromShotGenerator({ uid, data, images })
+    if (relatedTopPlan) {
+      await saveToTopPlanFromShotGenerator({ uid: util.uidGen(5),
+        data: { ...relatedTopPlan.data, topPlanCrop: relatedTopPlan.crop }, images: relatedTopPlan.images }, boardData.boards[index], false)
+    }
+    storeUndoStateForScene()
+    renderThumbnailDrawer()
+    renderMetaData()
+    ipcRenderer.send('shot-generator:update', { board: boardData.boards[index] })
+    if (requestId) ipcRenderer.send('shot-generator:save-result', { requestId })
+  } catch (error) {
+    if (requestId) ipcRenderer.send('shot-generator:save-result', { requestId, error: error.message })
+    else alert(error.message)
+  }
 })
 ipcRenderer.on('storyboarder:get-boards', event => {
   ipcRenderer.send('shot-generator:get-boards', {
-    boards: boardData.boards.map(board => ({
+    boards: (topPlansMode ? boardData.topPlans || [] : boardData.boards).map(board => ({
       uid: board.uid,
       shot: board.shot,
       thumbnail: boardModel.boardFilenameForThumbnail(board),
@@ -7231,7 +7395,7 @@ ipcRenderer.on('storyboarder:get-boards', event => {
 ipcRenderer.on('storyboarder:get-board', (event, uid) => {
   ipcRenderer.send(
     'shot-generator:get-board',
-    boardData.boards.find(board => board.uid === uid)
+    [...boardData.boards, ...(boardData.topPlans || [])].find(board => board.uid === uid)
   )
 })
 ipcRenderer.on('storyboarder:get-storyboarder-file-data', (event, uid) => {
@@ -7241,13 +7405,15 @@ ipcRenderer.on('storyboarder:get-storyboarder-file-data', (event, uid) => {
       storyboarderFilePath: boardFilename,
       boardData: {
         version: boardData.version,
+        defaultBoardTiming: boardData.defaultBoardTiming,
+        fps: boardData.fps,
         aspectRatio: boardData.aspectRatio
       }
     }
   )
 })
 ipcRenderer.on('storyboarder:get-state', event => {
-  let board = boardData.boards[currentBoard]
+  let board = topPlansMode && getTopPlansTimeline().selected || boardData.boards[currentBoard]
   ipcRenderer.send(
     'shot-generator:get-state',
     {

@@ -12,7 +12,7 @@ import {
   getSceneObjects
 } from '../../../shared/reducers/shot-generator'
 
-import defaultPosePresets from '../../../shared/reducers/shot-generator-presets/poses.json'
+import defaultPosePresets from '../../../shared/reducers/shot-generator-presets/poses'
 import presetsStorage from '../../../shared/store/presetsStorage'
 
 import { comparePresetNames, comparePresetPriority } from '../../utils/searchPresetsForTerms' 

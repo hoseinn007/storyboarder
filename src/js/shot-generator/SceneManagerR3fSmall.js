@@ -2,6 +2,8 @@ import { connect } from 'react-redux'
 import React, { useRef, useEffect, useCallback, useMemo, useLayoutEffect } from 'react'
 import { 
   getSceneObjects,
+  getEvaluatedSceneObjects,
+  getMotion,
   getWorld,
   selectObject,
   getSelections,
@@ -19,6 +21,7 @@ import { useDraggingManager } from './hooks/use-dragging-manager'
 import useShadingEffect from './hooks/use-shading-effect'
 import { ShadingType } from '../vendor/shading-effects/ShadingType'
 import Room from './components/Three/Room'
+import DynamicPaths from './components/Three/DynamicPaths'
 import RemoteClients from "./components/RemoteClients"
 import XRClient from "./components/Three/XRClient"
 import RemoteProvider from "./components/RemoteProvider"
@@ -28,7 +31,10 @@ const fontpnguri = 'fonts/thicccboi-bmfont/thicccboi-bold.png'
 
 const SceneManagerR3fSmall = connect(
     state => ({
-        sceneObjects: getSceneObjects(state),
+        sceneObjects: getEvaluatedSceneObjects(state),
+        baseSceneObjects: getSceneObjects(state),
+        preview: state.motionPlayback.preview,
+        motion: getMotion(state),
         world: getWorld(state),
         aspectRatio: state.aspectRatio,
         storyboarderFilePath: state.meta.storyboarderFilePath,
@@ -41,6 +47,9 @@ const SceneManagerR3fSmall = connect(
     }
 )( React.memo(({ 
     sceneObjects,
+    baseSceneObjects,
+    preview,
+    motion,
     world,
     aspectRatio,
     storyboarderFilePath,
@@ -94,6 +103,7 @@ const SceneManagerR3fSmall = connect(
     }, [scene, camera, gl])
 
     const onPointerDown = useCallback((e) => {
+      if (preview) return
       let match
       e.object.traverseAncestors((o) => {
         if(o.userData.id) match = o
@@ -106,7 +116,7 @@ const SceneManagerR3fSmall = connect(
       draggedObject.current = match
       const { x, y } = mouse(e)
       prepareDrag( draggedObject.current, {x, y, camera, scene, selections:[match.userData.id] })
-    }, [selections, mouse])
+    }, [selections, mouse, preview])
 
     const onPointerMove = useCallback((e) => {
       if(!draggedObject.current) return
@@ -153,6 +163,17 @@ const SceneManagerR3fSmall = connect(
         }
       }
       
+      // Include all authored positions so framing does not chase playback.
+      if (motion && motion.schemaVersion === 1) {
+        for (const key of motion.keyPoints) {
+          for (const point of Object.values(key.objects)) {
+            minMax[0] = Math.min(minMax[0], point.x)
+            minMax[1] = Math.max(minMax[1], point.x)
+            minMax[2] = Math.min(minMax[2], point.y)
+            minMax[3] = Math.max(minMax[3], point.y)
+          }
+        }
+      }
       // if only one object is in the scene (a single camera)
       if (numVisible === 1) {
         // add some extra padding
@@ -198,7 +219,7 @@ const SceneManagerR3fSmall = connect(
       camera.near = -1000
       camera.far = 1000
       camera.updateProjectionMatrix()
-    }, [scene, camera, renderData])
+    }, [scene, camera, renderData, motion])
 
     useEffect(() => {
         camera.position.y = 900
@@ -207,7 +228,7 @@ const SceneManagerR3fSmall = connect(
         camera.updateMatrixWorld(true)
     }, [])
 
-    useEffect(autofitOrtho, [sceneObjects, aspectRatio, fontMesh, renderData])
+    useEffect(autofitOrtho, [baseSceneObjects, motion, aspectRatio, fontMesh, renderData])
     useEffect(() => {
       window.addEventListener("pointerup", onPointerUp)
       return () => window.removeEventListener("pointerup", onPointerUp)
@@ -302,6 +323,7 @@ const SceneManagerR3fSmall = connect(
 
     /////Render components
     return <group ref={rootRef}>
+      <DynamicPaths/>
    
       <ambientLight
         ref={ambientLightRef}
@@ -350,7 +372,7 @@ const SceneManagerR3fSmall = connect(
                 mainCamera={ mainRenderData.camera }
                 isSelected={ selections.includes(sceneObject.id) }
                 fontMesh={ fontMesh } 
-                autofitOrtho={ autofitOrtho } />
+                autofitOrtho={ preview ? () => {} : autofitOrtho } />
         })
     }
     {

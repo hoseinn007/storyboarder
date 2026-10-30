@@ -280,7 +280,7 @@
         "title": "Open",
         "description": "Open Shot Generator"
       },
-      "new-shot": "New Shot?",
+      "new-shot": "New Shot?nv",
       "new-shot-tooltip": {
         "title": "Is this board a new shot?",
         "description": "Check this box if the board is a new shot. You can have multiple boards per shot. This way you can animate or make a transition in a shot."

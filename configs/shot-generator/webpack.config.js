@@ -11,6 +11,16 @@ module.exports = {
   module: {
     rules: [
       {
+        // Lower PeerJS private fields for Webpack 4 using installed Babel.
+        test: /\.m?js$/,
+        include: path.dirname(require.resolve('peerjs/package.json')),
+        type: 'javascript/auto',
+        use: { loader: 'babel-loader', options: {
+          presets: [['@babel/preset-env', { targets: { chrome: '79' } }]],
+          plugins: ['@babel/plugin-proposal-class-properties']
+        } }
+      },
+      {
         test: /\.(js|jsx)$/,
         exclude: /node_modules\/(?!(electron-redux)\/).*/,
         use: {
@@ -44,7 +54,11 @@ module.exports = {
     })
   ],
   externals: {
-    uws: "uws"
+    uws: "uws",
+    // These packages locate executable files at runtime.
+    'ffmpeg-static': 'commonjs ffmpeg-static',
+    execa: 'commonjs execa',
+    pdfkit: 'commonjs pdfkit'
   },
   resolve: {
     alias: {

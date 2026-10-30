@@ -2,13 +2,13 @@ import React, { useEffect } from 'react'
 import { connect } from 'react-redux'
 import { useThree } from 'react-three-fiber'
 import { 
-    getSceneObjects,
+    getEvaluatedSceneObjects,
     getActiveCamera,
  } from '../shared/reducers/shot-generator'
 
 const CameraUpdate = connect(    
     state => ({
-    activeCamera: getSceneObjects(state)[getActiveCamera(state)],
+    activeCamera: getEvaluatedSceneObjects(state)[getActiveCamera(state)],
 }),
 {
 }

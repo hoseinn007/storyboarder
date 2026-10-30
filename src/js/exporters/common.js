@@ -175,6 +175,7 @@ module.exports = {
 
   msecsToFrames,
   getImage,
+  getCanvasImageSourcesDataForBoard,
   exportFlattenedBoard,
   flattenCanvasImageSourcesDataToContext,
   flattenBoardToCanvas,

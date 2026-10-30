@@ -10,6 +10,8 @@ import CamerasInspector from './../CamerasInspector'
 import SceneManagerR3fLarge from '../../SceneManagerR3fLarge'
 import SceneManagerR3fSmall from '../../SceneManagerR3fSmall'
 import Toolbar from './../Toolbar'
+import DynamicBoard from '../DynamicBoard'
+import TopPlanExport from '../TopPlanExport'
 import FatalErrorBoundary from './../FatalErrorBoundary'
 
 import useSaveToStoryboarder from '../../hooks/use-save-to-storyboarder'
@@ -50,7 +52,7 @@ import useUIScale from '../../hooks/use-ui-scale'
 const getUserPresetPath = createUserPresetPathResolver(remote.app.getPath('userData'))
 
 const Editor = React.memo(({
-  mainViewCamera, aspectRatio, board, world, storyboarderFilePath,
+  mainViewCamera, aspectRatio, board, world, storyboarderFilePath, motionPlayback, cancelRender,
   setMainViewCamera, withState, store, onBeforeUnload,
 }) => {
   if (!board.uid) {
@@ -58,6 +60,7 @@ const Editor = React.memo(({
   }
   const { t } = useTranslation()
   const notificationsRef = useRef(null)
+  const [topPlanOpen, setTopPlanOpen] = useState(false)
 
   const mainViewContainerRef = useRef(null)
   const [stats, setStats] = useState()
@@ -162,7 +165,7 @@ const Editor = React.memo(({
     smallCanvasData.current.gl = gl
   }
 
-  const { insertNewShot, saveCurrentShot } = useSaveToStoryboarder(
+  const { insertNewShot, saveCurrentShot, insertTopPlan } = useSaveToStoryboarder(
     largeCanvasData, smallCanvasData, aspectRatio, world.shadingMode, world.backgroundColor
   )
   useEffect(() => {
@@ -187,7 +190,7 @@ const Editor = React.memo(({
   return (
     <FilepathsContext.Provider value={filepathsState}>
       <FatalErrorBoundary key={board.uid}>
-        <div id="root">
+        <div id="root" style={{ pointerEvents: motionPlayback.rendering ? 'none' : 'auto' }}>
           <Toolbar
             withState={withState}
             ipcRenderer={ipcRenderer}
@@ -224,6 +227,18 @@ const Editor = React.memo(({
                 </div>
               </div>
 
+              <div className="top-plan-export-bar">
+                <button className="top-plan-export-button" onClick={() => setTopPlanOpen(true)} disabled={motionPlayback.rendering}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M3 3h18v11M3 3v18h10M8 3v8h8M8 16H3M18 14v8m-4-4 4 4 4-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  Export top plan (PNG / PDF)
+                </button>
+                <button className="top-plan-export-button top-plan-insert-button" onClick={insertTopPlan} disabled={motionPlayback.rendering}>
+                  + Add top plan to timeline
+                </button>
+              </div>
+
               <div id="elements">
                 <ElementsPanel/>
               </div>
@@ -231,7 +246,7 @@ const Editor = React.memo(({
 
             <div className="column fill">
               <div id="camera-view" ref={ mainViewContainerRef }>
-                <div id="camera-view-view" style={{ width: largeCanvasInfo.width, height: largeCanvasInfo.height }}>
+                <div id="camera-view-view" style={{ width: largeCanvasInfo.width, height: largeCanvasInfo.height, pointerEvents: motionPlayback.preview ? 'none' : 'auto' }}>
                     <Canvas
                     tabIndex={ 1 }
                     key="camera-canvas"
@@ -254,8 +269,9 @@ const Editor = React.memo(({
                       dimensions={guidesDimensions}
                     />
                 </div>
+                <DynamicBoard onSave={saveCurrentShot} onInsert={insertNewShot}/>
               </div>
-              <div className="inspectors">
+              <div className="inspectors" style={{ pointerEvents: motionPlayback.preview ? 'none' : 'auto', opacity: motionPlayback.preview ? 0.6 : 1 }}>
                 <CameraPanelInspector/>
                 <BoardInspector/>
                 <div style={{ flex: "1 1 auto" }}>
@@ -266,7 +282,12 @@ const Editor = React.memo(({
             </div>
           </div>
         </div>
-        <KeyHandler/>
+        {!motionPlayback.preview && !motionPlayback.rendering && <KeyHandler/>}
+        {motionPlayback.rendering && <div className="dynamic-board__progress" role="status">
+          <strong>Preparing dynamic board… {Math.round(motionPlayback.progress * 100)}%</strong>
+          <button disabled={motionPlayback.progress >= 1} onClick={cancelRender}>Cancel</button>
+        </div>}
+        {topPlanOpen && <TopPlanExport canvasData={smallCanvasData} onClose={() => setTopPlanOpen(false)}/>}
         <MenuManager t={ t }/>
 
         <div
@@ -282,6 +303,7 @@ const withState = (fn) => (dispatch, getState) => fn(dispatch, getState())
 export default connect(
   (state) => ({
     mainViewCamera: state.mainViewCamera,
+    motionPlayback: state.motionPlayback,
     aspectRatio: state.aspectRatio,
     board: state.board,
     world: getWorld(state),
@@ -289,10 +311,11 @@ export default connect(
   }),
   {
     withState,
+    cancelRender: () => ({ type: 'SET_MOTION_PLAYBACK', payload: { cancelRequested: true } }),
     setMainViewCamera,
     selectObject,
     onBeforeUnload: event => (dispatch, getState) => {
-      if (getIsSceneDirty(getState())) {
+      if (getIsSceneDirty(getState()) || getState().motionPlayback.rendering) {
         // pass electron-specific flag
         // to trigger `will-prevent-unload` on BrowserWindow
         event.returnValue = false
