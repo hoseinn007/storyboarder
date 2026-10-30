@@ -1,5 +1,5 @@
 const { useEffect, useState } = React
-const { useThree } = require('react-three-fiber')
+const { useThree } = require('@react-three/fiber')
 
 const useIsXrPresenting = () => {
   const { gl } = useThree()

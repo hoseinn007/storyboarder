@@ -1,5 +1,5 @@
 import React, {useCallback, useState, useEffect} from 'react'
-import {Canvas} from 'react-three-fiber'
+import {Canvas} from '@react-three/fiber'
 import {Provider, connect} from "react-redux"
 
 import {SceneState} from "../../helpers/sceneState"
@@ -74,10 +74,8 @@ const App = ({sceneObjects, world, board}) => {
           </SceneState.Provider>
         </div>
       </div>
-      <Canvas
-        vr={true}
-        gl2={true}
-        noEvents={true}
+      <Canvas linear flat dpr={1}
+        events={() => ({ enabled: false, priority: 1 })}
         onCreated={onCreated}
       >
         <SceneState.Provider value={innerState}>

@@ -1,5 +1,5 @@
 const { useState } = React = require('react')
-const { useThree } = require('react-three-fiber')
+const { useThree } = require('@react-three/fiber')
 
 const useInterval = require('../hooks/use-interval')
 

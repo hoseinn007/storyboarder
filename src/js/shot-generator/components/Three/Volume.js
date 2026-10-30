@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react'
 import * as THREE from 'three'
-import { useUpdate } from 'react-three-fiber'
+import useUpdate from '../../../hooks/use-three-update'
 import { SHOT_LAYERS } from '../../utils/ShotLayers'
 import { useAssets } from '../../hooks/use-assets-manager'
 class LAYERS_STATUS {

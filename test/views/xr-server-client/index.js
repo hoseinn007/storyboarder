@@ -4,7 +4,7 @@ const THREE = require('three')
 window.THREE = window.THREE || THREE
 
 const { useEffect, useState } = React = require('react')
-const ReactDOM = require('react-dom')
+const ReactRoot = require('../../../src/js/utils/react-root')
 
 const { reducer, getHash } = require('../../../src/js/shared/reducers/shot-generator')
 
@@ -225,7 +225,7 @@ const TestUI = () => {
   )
 }
 
-ReactDOM.render(
+ReactRoot.render(
   <div>
     <TestUI />
   </div>,

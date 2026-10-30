@@ -11,11 +11,11 @@ const fs = require('fs-extra')
 
 const { useMemoOne } = require('use-memo-one')
 const { Suspense } = React = require('react')
-const ReactDOM = require('react-dom')
+const ReactRoot = require('../../../src/js/utils/react-root')
 const { Provider, useSelector } = require('react-redux')
 const { createStore } = require('redux')
 const { createAsset, useAsset } = require('use-asset')
-const { useLoader } = require('react-three-fiber')
+const { useLoader } = require('@react-three/fiber')
 const { GLTFLoader } = require('three/examples/jsm/loaders/GLTFLoader')
 
 const { reducer, initialState } = require('../../../src/js/shared/reducers/shot-generator')
@@ -206,7 +206,7 @@ remote.getCurrentWebContents().openDevTools()
 
 let el = document.createElement('div')
 document.body.appendChild(el)
-ReactDOM.render(
+ReactRoot.render(
   <Provider store={store}>
     <div className="container" style={{ margin: 50 }}>
       <Suspense fallback={<h1>Loading …</h1>}>

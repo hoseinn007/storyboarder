@@ -67,7 +67,6 @@ const buildSquareRoom = (w, l, h, { textures }) => {
   mesh.geometry.uvsNeedUpdate = true
   mesh.geometry.buffersNeedUpdate = true
   mesh.geometry.computeBoundingSphere()
-  mesh.geometry.computeFaceNormals()
   mesh.geometry.computeVertexNormals()
 
   mesh.renderOrder = 1.0

@@ -50,11 +50,11 @@ const ShotAngles = {
 }
 
 const ShotAnglesInfo = {
-  [ShotAngles.BIRDS_EYE]: -30 * THREE.Math.DEG2RAD,
-  [ShotAngles.HIGH]: -15 * THREE.Math.DEG2RAD,
+  [ShotAngles.BIRDS_EYE]: -30 * THREE.MathUtils.DEG2RAD,
+  [ShotAngles.HIGH]: -15 * THREE.MathUtils.DEG2RAD,
   [ShotAngles.EYE]: 0,
-  [ShotAngles.LOW]: 30 * THREE.Math.DEG2RAD,
-  [ShotAngles.WORMS_EYE]: 45 * THREE.Math.DEG2RAD
+  [ShotAngles.LOW]: 30 * THREE.MathUtils.DEG2RAD,
+  [ShotAngles.WORMS_EYE]: 45 * THREE.MathUtils.DEG2RAD
 }
 
 const ShotSizesInfo = {

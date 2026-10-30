@@ -17,6 +17,24 @@ module.exports = {
   module: {
     rules: [
       {
+        test: /\.m?js$/,
+        include: /node_modules[\\/]@thi\.ng[\\/]/,
+        use: { loader: 'babel-loader', options: {
+          presets: [['@babel/preset-env', { targets: { chrome: '79' } }]],
+          plugins: [
+            '@babel/plugin-proposal-class-properties',
+            // This Electron bundle has process.env; Vite's import.meta.env
+            // fallback in @thi.ng is unavailable and Webpack 4 cannot parse it.
+            () => ({ visitor: { MetaProperty(metaPath) {
+              if (metaPath.node.meta.name === 'import') {
+                metaPath.replaceWithSourceString('({ env: undefined })')
+              }
+            } } })
+          ]
+        } }
+      },
+      { test: /\.mjs$/, type: 'javascript/auto' },
+      {
         test: /\.(js)$/,
         use: {
           loader: 'babel-loader',

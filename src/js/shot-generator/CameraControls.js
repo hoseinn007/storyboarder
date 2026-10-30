@@ -77,7 +77,7 @@ class CameraControls {
   }
 
   calculateInitialHeight (position) {
-    let vFOV = THREE.Math.degToRad(this._object.fov )
+    let vFOV = THREE.MathUtils.degToRad(this._object.fov )
     let direction = new THREE.Vector3()
     this.camera.getWorldDirection(direction)
     let a = new THREE.Vector2(position.x, position.z)
@@ -365,7 +365,7 @@ class CameraControls {
        
         let newTarget = direction.add(camera.position)
         let distance = camera.position.distanceTo(newTarget)
-        let fov = 2 * Math.atan( this.initialHeight / ( 2 * distance)) * THREE.Math.RAD2DEG
+        let fov = 2 * Math.atan( this.initialHeight / ( 2 * distance)) * THREE.MathUtils.RAD2DEG
         let position = camera.position
         if((fov > 15 && fov < 90) && distance >= 1 ) {
           this._object.x = position.x

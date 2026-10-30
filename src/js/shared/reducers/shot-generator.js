@@ -954,7 +954,7 @@ const sceneObjectsReducer = (state = {}, action) => {
       case 'CREATE_OBJECT':
         let id = action.payload.id != null
           ? action.payload.id
-          : THREE.Math.generateUUID()
+          : THREE.MathUtils.generateUUID()
 
         draft[id] = {
           ...action.payload, id
@@ -1140,7 +1140,7 @@ const sceneObjectsReducer = (state = {}, action) => {
             if (source.children) {
               draft[dstId].children = []
               source.children.map((childId) => {
-                let newDstId = THREE.Math.generateUUID()
+                let newDstId = THREE.MathUtils.generateUUID()
                 let sourceChild = state[childId]
   
                 draft[newDstId] = {
@@ -1791,7 +1791,7 @@ module.exports = {
   groupObjects: ids => ({
     type: 'GROUP_OBJECTS',
     payload: {
-      groupId: THREE.Math.generateUUID(),
+      groupId: THREE.MathUtils.generateUUID(),
       ids
     }
   }),

@@ -118,7 +118,7 @@ const KeyHandler = connect(
           // ids to duplicate
             selected,
           // new ids
-            selected.map(THREE.Math.generateUUID)
+            selected.map(THREE.MathUtils.generateUUID)
         )
       }
     }, [selections, _selectedSceneObject])

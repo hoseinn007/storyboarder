@@ -17,7 +17,7 @@ const BoneInspector = ({ sceneObject, selectedBone, updateCharacterSkeleton }) =
     })
   }, [bone])
 
-  const transfromValue = (key) => THREE.Math.radToDeg(bone.rotation[key]) 
+  const transfromValue = (key) => THREE.MathUtils.radToDeg(bone.rotation[key])
 
   // the posePresetId and skeleton will change synchronously
   // but the three scene will not have updated bones until SceneManager renders
@@ -43,7 +43,7 @@ const BoneInspector = ({ sceneObject, selectedBone, updateCharacterSkeleton }) =
                 max={ 180 }
                 step={ 1 }
                 value={ transfromValue("x") }
-                onSetValue={ createOnSetValue("x", THREE.Math.degToRad) }
+                onSetValue={ createOnSetValue("x", THREE.MathUtils.degToRad) }
                 transform={ transforms.degrees }
                 formatter={ formatters.degrees }/>
             <NumberSlider
@@ -52,7 +52,7 @@ const BoneInspector = ({ sceneObject, selectedBone, updateCharacterSkeleton }) =
                 max={ 180 }
                 step={ 1 }
                 value={ transfromValue("y") }
-                onSetValue={ createOnSetValue("y", THREE.Math.degToRad) }
+                onSetValue={ createOnSetValue("y", THREE.MathUtils.degToRad) }
                 transform={ transforms.degrees }
                 formatter={ formatters.degrees }/>
             <NumberSlider
@@ -61,7 +61,7 @@ const BoneInspector = ({ sceneObject, selectedBone, updateCharacterSkeleton }) =
                 max={ 180 }
                 step={ 1 }
                 value={ transfromValue("z") }
-                onSetValue={ createOnSetValue("z", THREE.Math.degToRad) }
+                onSetValue={ createOnSetValue("z", THREE.MathUtils.degToRad) }
                 transform={ transforms.degrees }
                 formatter={ formatters.degrees }/>
         </div> 

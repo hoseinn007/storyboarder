@@ -19,7 +19,7 @@ import { useExportToGltf, loadCameraModel } from '../../../hooks/use-export-to-g
 
 import useComponentSize from './../../../hooks/use-component-size'
 
-import { Canvas } from 'react-three-fiber'
+import { Canvas } from '@react-three/fiber'
 
 import BonesHelper from '../../../xr/src/three/BonesHelper'
 import {
@@ -200,14 +200,13 @@ const Editor = React.memo(({
             <div id="aside">
 
               <div id="topdown">
-              <Canvas
+              <Canvas linear flat dpr={1}
                   key="top-down-canvas"
                   id="top-down-canvas"
                   tabIndex={0}
-                  gl2={true}
                   orthographic={ true }
-                  updateDefaultCamera={ false }
-                  noEvents={ true }>
+                  camera={{ manual: true }}
+                  events={() => ({ enabled: false, priority: 1 })}>
                   <Provider store={ store }>
                     <SceneManagerR3fSmall
                       renderData={ mainViewCamera === "live" ? null : largeCanvasData.current }
@@ -247,13 +246,11 @@ const Editor = React.memo(({
             <div className="column fill">
               <div id="camera-view" ref={ mainViewContainerRef }>
                 <div id="camera-view-view" style={{ width: largeCanvasInfo.width, height: largeCanvasInfo.height, pointerEvents: motionPlayback.preview ? 'none' : 'auto' }}>
-                    <Canvas
+                    <Canvas linear flat dpr={1}
                     tabIndex={ 1 }
                     key="camera-canvas"
                     id="camera-canvas"
-                    gl2={true}
-                    updateDefaultCamera={ true }
-                    noEvents={ true }>
+                    events={() => ({ enabled: false, priority: 1 })}>
                       <Provider store={ store }>
                         <FilepathsContext.Provider value={filepathsState}>
                           <SceneManagerR3fLarge

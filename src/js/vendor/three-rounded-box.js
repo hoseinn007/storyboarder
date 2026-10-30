@@ -3,7 +3,8 @@
  */
 module.exports = function( THREE ){
 
-  RoundedBoxGeometry = function (
+  class RoundedBoxGeometry extends THREE.BufferGeometry {
+  constructor (
     width ,
     height ,
     depth ,
@@ -11,7 +12,7 @@ module.exports = function( THREE ){
     radiusSegments
   ) {
 
-    THREE.BufferGeometry.call( this );
+    super();
 
     this.type = 'RoundedBoxGeometry';
 
@@ -584,8 +585,8 @@ module.exports = function( THREE ){
 
   };
 
-  RoundedBoxGeometry.prototype = Object.create( THREE.BufferGeometry.prototype );
-  RoundedBoxGeometry.constructor = RoundedBoxGeometry;
+  }
+
 
   return RoundedBoxGeometry;
 

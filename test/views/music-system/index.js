@@ -6,7 +6,7 @@ const THREE = require('three')
 const musicSystem = require('../../../src/js/xr/src/music-system')
 
 const React = require('react')
-const ReactDOM = require('react-dom')
+const ReactRoot = require('../../../src/js/utils/react-root')
 
 console.log = function (...rest) {
   document.getElementById('output').innerHTML += `${rest.join(',')}<br/>`
@@ -107,7 +107,7 @@ window.onclick = function () {
           </>
         }
 
-        ReactDOM.render(
+        ReactRoot.render(
           <Output />,
           document.getElementById('app')
         )

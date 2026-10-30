@@ -1,4 +1,4 @@
-const ReactDOM = require('react-dom')
+const ReactRoot = require('../../utils/react-root')
 const React = require('react')
 const { ipcRenderer, shell } = electron = require('electron')
 const { Provider, batch } = require('react-redux')
@@ -26,7 +26,7 @@ require("../../shared/helpers/monkeyPatchGrayscale")
 let sendedAction = []
 let isBoardShown = false
 let isBoardLoaded = false
-let componentKey = THREE.Math.generateUUID()
+let componentKey = THREE.MathUtils.generateUUID()
 let shotExplorerElement 
 let isVisible = remote.getCurrentWindow().visible
 let defaultHeight = 800
@@ -237,7 +237,7 @@ const loadBoard = async (board, storyboarderFilePath) => {
 }
 
 const renderShotExplorer = () => {
-  componentKey = THREE.Math.generateUUID()
+  componentKey = THREE.MathUtils.generateUUID()
   return <ShotExplorer 
                 elementKey={ componentKey } 
                 store={ store }
@@ -246,7 +246,7 @@ const renderShotExplorer = () => {
 shotExplorerElement = renderShotExplorer()
 
 const renderDom = () => {
-  ReactDOM.render(
+  ReactRoot.render(
     (store && <Provider store={ store }>
      { shotExplorerElement }
     </Provider> ),

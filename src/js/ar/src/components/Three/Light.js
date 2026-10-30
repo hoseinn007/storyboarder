@@ -1,6 +1,6 @@
 import React, {useMemo, useEffect} from 'react'
 import {connect} from 'react-redux'
-import {useUpdate} from 'react-three-fiber'
+import useUpdate from '../../../../hooks/use-three-update'
 
 import {getSceneObjects, getSelections} from "../../../../shared/reducers/shot-generator"
 

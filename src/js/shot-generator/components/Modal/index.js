@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useCallback } from 'react'
-import posed, { PoseGroup } from 'react-pose'
+import { motion, AnimatePresence } from 'framer-motion'
 
 import useOnClickOutside from './../../../hooks/use-on-click-outside'
 
@@ -8,12 +8,11 @@ const emptyCallback = () => {}
 const modalBackgroundPoses = {
   enter: {
     opacity: 1,
-    transition: {duration: 200}
+    transition: {duration: 0.2}
   },
   exit: {
     opacity: 0,
-    transition: {duration: 200},
-    delay: 200
+    transition: {duration: 0.2, delay: 0.2}
   }
 }
 
@@ -21,18 +20,15 @@ const modalBodyPoses = {
   enter: {
     opacity: 1,
     marginTop: 0,
-    transition: {duration: 200},
-    delay: 100
+    transition: {duration: 0.2, delay: 0.1}
   },
   exit: {
     opacity: 0,
     marginTop: -64,
-    transition: {duration: 300}
+    transition: {duration: 0.3}
   }
 }
 
-const ModalBackground = posed.div(modalBackgroundPoses)
-const ModalBody = posed.div(modalBodyPoses)
 
 const vAlignTable = {
   'top': 'flex-start',
@@ -81,24 +77,29 @@ const Modal = React.memo(({
   const keyDown = useCallback((event) => event.stopPropagation(), [])
   
   return (
-    <PoseGroup >
+    <AnimatePresence>
       {
         visible &&
-          <ModalBackground
+          <motion.div
+              variants={modalBackgroundPoses}
+              initial="exit"
+              animate="enter"
+              exit="exit"
               className="modal__overlay"
               style={styles}
               key="modalBackground"
               onKeyDown={ keyDown }
           >
-            <ModalBody
+            <motion.div
+                variants={modalBodyPoses}
                 className={`modal__window ${modalClassName}`}
                 ref={modalRef}
             >
               {children}
-            </ModalBody>
-          </ModalBackground>
+            </motion.div>
+          </motion.div>
       }
-    </PoseGroup>
+    </AnimatePresence>
   )
 })
 

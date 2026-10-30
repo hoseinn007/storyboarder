@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react'
-import {useThree, useFrame} from "react-three-fiber"
+import {useThree, useFrame} from "@react-three/fiber"
 
 import observable from "../../../utils/observable"
 

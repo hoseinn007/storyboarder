@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import React, { useMemo, useEffect } from 'react'
 import {useAsset} from "../../hooks/use-assets-manager"
-import {useUpdate} from 'react-three-fiber'
+import useUpdate from '../../../hooks/use-three-update'
 import onlyOfTypes from './../../utils/only-of-types'
 import { SHOT_LAYERS } from '../../utils/ShotLayers'
 

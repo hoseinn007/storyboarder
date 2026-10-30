@@ -1,4 +1,5 @@
-const { useThree, useFrame } = require('react-three-fiber')
+const getSceneInteractions = require('../../utils/scene-interactions')
+const { useThree, useFrame } = require('@react-three/fiber')
 const { useMemo, useRef, useEffect, useCallback, useState } = React = require('react')
 const { useSelector, useDispatch } = require('react-redux')
 const useReduxStore = require('react-redux').useStore
@@ -117,11 +118,11 @@ const snapObjectRotation = (object) => {
 
   // snap rotation y by 22.5°
   const sign = Math.sign(object.rotation.y)
-  let degreeY = THREE.Math.radToDeg(Math.abs(object.rotation.y)) / 22.5
-  degreeY = THREE.Math.degToRad(Math.round(degreeY) * 22.5) * sign
+  let degreeY = THREE.MathUtils.radToDeg(Math.abs(object.rotation.y)) / 22.5
+  degreeY = THREE.MathUtils.degToRad(Math.round(degreeY) * 22.5) * sign
   // snap rotation z to 180°
-  let degreeZ = THREE.Math.radToDeg(Math.abs(object.rotation.z)) / 180
-  degreeZ = THREE.Math.degToRad(Math.round(degreeZ) * 180)
+  let degreeZ = THREE.MathUtils.radToDeg(Math.abs(object.rotation.z)) / 180
+  degreeZ = THREE.MathUtils.degToRad(Math.round(degreeZ) * 180)
 
   let euler = new THREE.Euler(0, degreeY, 0)
   euler.reorder('YXZ')
@@ -386,7 +387,7 @@ const useInteractionsManager = ({
     mesh.position.copy(camera.worldPosition())
     mesh.position.z -= 1
     scene.add(mesh)
-    let interactions = scene.__interaction.concat([mesh])
+    let interactions = getSceneInteractions(scene).concat([mesh])
     gpuPicker.setupScene(interactions, getExcludeList(scene))
     let gpuCamera = gpuPicker.camera
     gpuCamera.fov = 360
@@ -461,7 +462,7 @@ const useInteractionsManager = ({
     const controller = event.target
     let intersection = null
 
-    let uis = scene.__interaction.filter(o => o.userData.type === 'ui' && o.name !== 'gui-boards')
+    let uis = getSceneInteractions(scene).filter(o => o.userData.type === 'ui' && o.name !== 'gui-boards')
     let intersections = getControllerIntersections(controller, uis)
     intersection = intersections.length && intersections[0]
     if (intersection) {
@@ -491,7 +492,7 @@ const useInteractionsManager = ({
       }
     }
 
-    let boardUi = scene.__interaction.filter(o => o.name === 'gui-boards')
+    let boardUi = getSceneInteractions(scene).filter(o => o.name === 'gui-boards')
     intersections = getControllerIntersections(controller, boardUi)
     intersection = intersections.length && intersections[0]
     if (intersection) {
@@ -569,7 +570,7 @@ const useInteractionsManager = ({
     let match = null
 
     // include all interactables (Model Object, Character, Virtual Camera, etc)
-    let list = scene.__interaction.filter(o => o.userData.type !== 'ui')
+    let list = getSceneInteractions(scene).filter(o => o.userData.type !== 'ui')
     // setup the GPU picker
     getGpuPicker().setupScene(list, getExcludeList(scene))
 
@@ -620,7 +621,7 @@ const useInteractionsManager = ({
 
     let intersection = null
 
-    let uis = scene.__interaction.filter(o => o.userData.type == 'ui')
+    let uis = getSceneInteractions(scene).filter(o => o.userData.type == 'ui')
     let intersections = getControllerIntersections(controller, uis)
     intersection = intersections.length && intersections[0]
     if (intersection) {
@@ -672,7 +673,7 @@ const useInteractionsManager = ({
     let match = null
 
     // include all interactables (Model Object, Character, etc)
-    let list = scene.__interaction
+    let list = getSceneInteractions(scene)
 
     // checks if any object is being actively dragged
     // if so, there's no reason to pick any other object except for dragged one
@@ -824,14 +825,14 @@ const useInteractionsManager = ({
       if (event.axes[0] > thumbStickSensitivity) {
         setDidRotateCamera(-45)
         playSound('teleport-rotate')
-        rotateCameraByRadians(camera, THREE.Math.degToRad(-45))
+        rotateCameraByRadians(camera, THREE.MathUtils.degToRad(-45))
       }
 
       // left
       if (event.axes[0] < -thumbStickSensitivity) {
         setDidRotateCamera(45)
         playSound('teleport-rotate')
-        rotateCameraByRadians(camera, THREE.Math.degToRad(45))
+        rotateCameraByRadians(camera, THREE.MathUtils.degToRad(45))
       }
     }
   }
@@ -1024,7 +1025,7 @@ const useInteractionsManager = ({
 
     if (mode === 'drag_object') {
       let controller = gl.xr.getController(context.draggingController)
-      let object3d = scene.__interaction.find(o => o.userData.id === context.selection)
+      let object3d = getSceneInteractions(scene).find(o => o.userData.id === context.selection)
 
       let shouldMoveWithCursor = (object3d.userData.type == 'character') || object3d.userData.staticRotation
       if (shouldMoveWithCursor) {
@@ -1034,10 +1035,10 @@ const useInteractionsManager = ({
         let wp = cursor.getWorldPosition(getReusableVector())
         if (controller.userData.selectOffset && object3d.userData.type == 'character') {
           wp.sub(controller.userData.selectOffset)
-          object3d.applyMatrix(object3d.parent.matrixWorld)
+          object3d.applyMatrix4(object3d.parent.matrixWorld)
           object3d.position.copy(wp)
           object3d.updateMatrixWorld()
-          object3d.applyMatrix(object3d.parent.getInverseMatrixWorld())
+          object3d.applyMatrix4(object3d.parent.getInverseMatrixWorld())
         }
 
         if (object3d.userData.staticRotation) {
@@ -1089,7 +1090,7 @@ const useInteractionsManager = ({
     if (uiService.state.value.input === 'dragging') {
       let controller = uiService.state.context.draggingController
 
-      let uis = scene.__interaction.filter(o => o.userData.type === 'ui')
+      let uis = getSceneInteractions(scene).filter(o => o.userData.type === 'ui')
       let intersections = getControllerIntersections(controller, uis)
       let intersection = intersections.length && intersections[0]
 
@@ -1225,7 +1226,7 @@ const useInteractionsManager = ({
           camera.parent.userData.prevRotation = useStoreApi.getState().teleportRot
 
           // Setting teleport position and apply rotation influence by 180 degree to translate it to hmd
-          teleport(realCamera, worldPosition.x, worldPosition.y - realCamera.position.y, worldPosition.z, ikHelper.ragDoll.originalObject.rotation.y + THREE.Math.degToRad(180))
+          teleport(realCamera, worldPosition.x, worldPosition.y - realCamera.position.y, worldPosition.z, ikHelper.ragDoll.originalObject.rotation.y + THREE.MathUtils.degToRad(180))
 
           let eulerRot = new THREE.Euler(0, 0, 0)
           let staticLimbRotation = new THREE.Quaternion().setFromEuler(eulerRot)
@@ -1234,12 +1235,12 @@ const useInteractionsManager = ({
           relativeAngle(realCamera, headBone, staticLimbRotation, realCamera.parent)
 
           eulerRot = new THREE.Euler(0, 0 ,0)
-          eulerRot.x = THREE.Math.degToRad(90)
-          eulerRot.y = THREE.Math.degToRad(90)
+          eulerRot.x = THREE.MathUtils.degToRad(90)
+          eulerRot.y = THREE.MathUtils.degToRad(90)
           staticLimbRotation.setFromEuler(eulerRot)
           relativeAngle(rightController, rightHandBone, staticLimbRotation, rightController.parent)
 
-          eulerRot.y = THREE.Math.degToRad(-90)
+          eulerRot.y = THREE.MathUtils.degToRad(-90)
           staticLimbRotation.setFromEuler(eulerRot)
           relativeAngle(leftController, leftHandBone, staticLimbRotation, leftController.parent)
 
@@ -1291,8 +1292,8 @@ const useInteractionsManager = ({
           uiService.send({ type: 'SHOW' })
         },
         onDropLowest: (context, event) => {
-          let object = scene.__interaction.find(o => o.userData.id === context.selection)
-          let placesForDrop = scene.__interaction.concat([groundRef.current])
+          let object = getSceneInteractions(scene).find(o => o.userData.id === context.selection)
+          let placesForDrop = getSceneInteractions(scene).concat([groundRef.current])
 
           if (object.userData.type === 'character') {
             let positionDifference = object.worldPosition().clone()
@@ -1408,7 +1409,7 @@ const useInteractionsManager = ({
         
         onDragObjectExit: (context, event) => {
           let controller = gl.xr.getController(context.draggingController)
-          let object = scene.__interaction.find(o => o.userData.id === context.selection)
+          let object = getSceneInteractions(scene).find(o => o.userData.id === context.selection)
 
           let root = rootRef.current
           if (object && object.parent !== root) {
@@ -1429,7 +1430,7 @@ const useInteractionsManager = ({
           
           commit(context.selection, object)
           if (object.userData.type === 'character') {
-            let mapAttachables = Object.values(scene.__interaction).filter(sceneObject => sceneObject.userData.bindedId === object.userData.id)
+            let mapAttachables = Object.values(getSceneInteractions(scene)).filter(sceneObject => sceneObject.userData.bindedId === object.userData.id)
             for(let i = 0; i < mapAttachables.length; i++) {
               commit(mapAttachables[i].userData.id, mapAttachables[i])
             }
@@ -1440,7 +1441,7 @@ const useInteractionsManager = ({
         
         onSnapStart: (context, event) => {
           let controller = gl.xr.getController(context.draggingController)
-          let object = scene.__interaction.find(o => o.userData.id === context.selection)
+          let object = getSceneInteractions(scene).find(o => o.userData.id === context.selection)
 
           let root = rootRef.current
           // put object in root space
@@ -1457,7 +1458,7 @@ const useInteractionsManager = ({
         },
         onSnapEnd: (context, event) => {
           let controller = gl.xr.getController(context.draggingController)
-          let object = scene.__interaction.find(o => o.userData.id === context.selection)
+          let object = getSceneInteractions(scene).find(o => o.userData.id === context.selection)
 
           if (object && object.userData.staticRotation) {
             object.userData.staticRotation = null
@@ -1471,7 +1472,7 @@ const useInteractionsManager = ({
 
         moveAndRotateObject: (context, event) => {
           let controller = gl.xr.getController(context.draggingController)
-          let object = scene.__interaction.find(o => o.userData.id === context.selection)
+          let object = getSceneInteractions(scene).find(o => o.userData.id === context.selection)
           
           let { worldScale } = useStoreApi.getState()
 

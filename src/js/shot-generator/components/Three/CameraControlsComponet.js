@@ -1,6 +1,7 @@
+const getSceneInteractions = require('../../../utils/scene-interactions')
 import { connect } from 'react-redux'
 import React, { useRef, useEffect } from 'react'
-import { useThree, useFrame } from 'react-three-fiber'
+import { useThree, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { 
     updateObject,
@@ -41,7 +42,7 @@ const CameraControlComponent = connect(
 
     const setCameraControlTarget = (selections) => {
         if(selections.length === 1 && selections[0] === activeCamera) return
-        let selectedObjects = scene.__interaction.filter(object => object.userData.type !== 'camera' && object.userData.type !== 'volume' 
+        let selectedObjects = getSceneInteractions(scene).filter(object => object.userData.type !== 'camera' && object.userData.type !== 'volume'
                                                           && selections.includes(object.userData.id) )
         if(!selectedObjects.length) {
           cameraControlsView.current.Target = null

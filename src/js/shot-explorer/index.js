@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useLayoutEffect, useMemo } from 'react'
 import ShotMaker from './ShotMaker'
 import { Provider, connect, useSelector } from 'react-redux'
-import { Canvas } from 'react-three-fiber'
-import { useThree, useFrame } from 'react-three-fiber'
+import { Canvas } from '@react-three/fiber'
+import { useThree, useFrame } from '@react-three/fiber'
 import ShotExplorerSceneManager from './ShotExplorerSceneManager'
 import FatalErrorBoundary from '../shot-generator/components/FatalErrorBoundary'
 import {OutlineEffect} from '../vendor/OutlineEffect'
@@ -104,13 +104,11 @@ const ShotExplorer = React.memo(({
     return storyboarderFilePath && (
       <FatalErrorBoundary key={ board.uid }>
           <div className="shot-explorer-shot-preview" style={{ width: windowWidth }}>
-              <Canvas
+              <Canvas linear flat dpr={1}
                   tabIndex={ 1 }
                   key="camera-canvas"
                   id="camera-canvas"
-                  gl2={true}
-                  updateDefaultCamera={ true }
-                  noEvents={ true }
+                  events={() => ({ enabled: false, priority: 1 })}
                   className="three-canvas" 
                   style={{ width: (canvasHeight - paddingToRight ) * aspectRatio, height: canvasHeight - paddingToRight, userSelect: "none" }}
                   >

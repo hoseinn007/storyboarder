@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react' 
 import { connect } from 'react-redux'
-import { useThree } from 'react-three-fiber'
+import { useThree } from '@react-three/fiber'
 import { 
     getEvaluatedSceneObjects,
     getActiveCamera,

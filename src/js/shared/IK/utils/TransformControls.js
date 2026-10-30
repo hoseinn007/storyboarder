@@ -13,9 +13,10 @@ const axis = {
 	Z_axis: 0x0004
 }
 
-const TransformControls = function ( camera, domElement, shownAxis = axis.X_axis | axis.Y_axis | axis.Z_axis ) {
+class TransformControls extends THREE.Object3D {
+constructor (camera, domElement, shownAxis = axis.X_axis | axis.Y_axis | axis.Z_axis) {
 
-	THREE.Object3D.call( this );
+	super();
 
 	domElement = ( domElement !== undefined ) ? domElement : document;
 
@@ -714,12 +715,12 @@ const TransformControls = function ( camera, domElement, shownAxis = axis.X_axis
 
 		console.warn( 'THREE.TransformControls: update function has been depricated.' );
 	};
+}
+}
 
-};
 
 
-
-TransformControls.prototype = Object.assign( Object.create( THREE.Object3D.prototype ), {
+Object.assign( TransformControls.prototype, {
 
   constructor: TransformControls,
 
@@ -728,11 +729,12 @@ TransformControls.prototype = Object.assign( Object.create( THREE.Object3D.proto
 } );
 
 
-const TransformControlsGizmo = function (shownAxis) {
+class TransformControlsGizmo extends THREE.Object3D {
+constructor (shownAxis) {
 
 	'use strict';
 
-	THREE.Object3D.call( this );
+	super();
 
 	this.type = 'TransformControlsGizmo';
 
@@ -1466,10 +1468,10 @@ const TransformControlsGizmo = function (shownAxis) {
 		THREE.Object3D.prototype.updateMatrixWorld.call( this );
 
 	};
+}
+}
 
-};
-
-TransformControlsGizmo.prototype = Object.assign( Object.create( THREE.Object3D.prototype ), {
+Object.assign( TransformControlsGizmo.prototype, {
 
 	constructor: TransformControlsGizmo,
 
@@ -1478,11 +1480,12 @@ TransformControlsGizmo.prototype = Object.assign( Object.create( THREE.Object3D.
 } );
 
 
-const TransformControlsPlane = function () {
+class TransformControlsPlane extends THREE.Mesh {
+constructor () {
 
 	'use strict';
 
-	THREE.Mesh.call( this,
+	super(
 		new THREE.PlaneBufferGeometry( 100000, 100000, 2, 2 ),
 		new THREE.MeshBasicMaterial( { visible: false, wireframe: true, side: THREE.DoubleSide, transparent: true, opacity: 0.1 } )
 	);
@@ -1569,10 +1572,10 @@ const TransformControlsPlane = function () {
 		THREE.Object3D.prototype.updateMatrixWorld.call( this );
 
 	};
+}
+}
 
-};
-
-TransformControlsPlane.prototype = Object.assign( Object.create( THREE.Mesh.prototype ), {
+Object.assign( TransformControlsPlane.prototype, {
 
 	constructor: TransformControlsPlane,
 

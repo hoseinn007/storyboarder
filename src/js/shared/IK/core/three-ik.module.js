@@ -491,7 +491,7 @@ var IKJoint = function () {
     key: '_worldToLocalDirection',
     value: function _worldToLocalDirection(direction) {
       if (this.bone.parent) {
-        var inverseParent = new Matrix4().getInverse(this.bone.parent.matrixWorld);
+        var inverseParent = new Matrix4().copy(this.bone.parent.matrixWorld).invert();
         direction.transformDirection(inverseParent);
       }
       return direction;
@@ -504,7 +504,7 @@ var IKJoint = function () {
       var parent = this.bone.parent;
       if (parent) {
         this._updateMatrixWorld();
-        var inverseParent = new Matrix4().getInverse(this.bone.parent.matrixWorld);
+        var inverseParent = new Matrix4().copy(this.bone.parent.matrixWorld).invert();
         transformPoint(position, inverseParent, position);
         this.bone.position.copy(position);
         this._updateMatrixWorld();
@@ -903,7 +903,7 @@ var BoneHelper = function (_Object3D) {
   inherits(BoneHelper, _Object3D);
   function BoneHelper(height, boneSize, axesSize) {
     classCallCheck(this, BoneHelper);
-    var _this = possibleConstructorReturn(this, (BoneHelper.__proto__ || Object.getPrototypeOf(BoneHelper)).call(this));
+    var _this = possibleConstructorReturn(this, Reflect.construct(Object.getPrototypeOf(BoneHelper), [], BoneHelper));
     if (height !== 0) {
       var geo = new ConeBufferGeometry(boneSize, height, 4);
       geo.applyMatrix4(new Matrix4().makeRotationAxis(new Vector3(1, 0, 0), Math.PI / 2));
@@ -935,7 +935,7 @@ var IKHelper = function (_Object3D2) {
         axesSize = _ref.axesSize,
         wireframe = _ref.wireframe;
     classCallCheck(this, IKHelper);
-    var _this2 = possibleConstructorReturn(this, (IKHelper.__proto__ || Object.getPrototypeOf(IKHelper)).call(this));
+    var _this2 = possibleConstructorReturn(this, Reflect.construct(Object.getPrototypeOf(IKHelper), [], IKHelper));
     boneSize = boneSize || 0.1;
     axesSize = axesSize || 0.2;
     if (!ik.isIK) {

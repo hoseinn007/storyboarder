@@ -87,7 +87,7 @@ const waitForScene = () => new Promise(resolve => requestAnimationFrame(() => re
 let saving = false
 
 const sendSave = (channel, payload) => new Promise((resolve, reject) => {
-  const requestId = THREE.Math.generateUUID()
+  const requestId = THREE.MathUtils.generateUUID()
   const listener = (event, result) => {
     if (result.requestId !== requestId) return
     clearTimeout(timer)

@@ -1,6 +1,8 @@
+const getSceneInteractions = require('../../../utils/scene-interactions')
 const THREE = require('three')
 const { useMemo, useEffect, useRef, useState } = React = require('react')
-const { useUpdate, useThree } = require('react-three-fiber')
+const { useThree } = require('@react-three/fiber')
+const useUpdate = require('../../../hooks/use-three-update')
 
 
 const traverseMeshMaterials = require('../helpers/traverse-mesh-materials')
@@ -74,12 +76,6 @@ const Attachable = React.memo(({ gltf, sceneObject, isSelected, updateObject, ch
     }, [characterModel])
 
     useEffect(() => {
-      if(!ref.current) return 
-      let index = scene.__interaction.indexOf(ref.current)
-      if (index === -1) scene.__interaction.push(ref.current) 
-    }, [characterModel])
-
-    useEffect(() => {
       return () => {
         if(!characterObject.current || !ref.current.parent) return
         ref.current.parent.remove(ref.current)
@@ -88,7 +84,7 @@ const Attachable = React.memo(({ gltf, sceneObject, isSelected, updateObject, ch
 
     useEffect(() => {  
       if(!(characterChildrenLength > 0)) return
-      let object = scene.__interaction.filter(o => o.userData.id === sceneObject.attachToId)[0]
+      let object = getSceneInteractions(scene).filter(o => o.userData.id === sceneObject.attachToId)[0]
       setCharacterLOD(object.getObjectByProperty("type", "LOD"))
     }, [characterChildrenLength])
 
@@ -119,7 +115,7 @@ const Attachable = React.memo(({ gltf, sceneObject, isSelected, updateObject, ch
 
     useEffect(() => {
       if(!characterModel || !characterLOD) return 
-        characterObject.current = scene.__interaction.filter(o => o.userData.id === sceneObject.attachToId)[0]
+        characterObject.current = getSceneInteractions(scene).filter(o => o.userData.id === sceneObject.attachToId)[0]
         if(!characterObject.current) return
         let skinnedMesh = characterObject.current.getObjectByProperty("type", "SkinnedMesh")
         let bone = skinnedMesh.skeleton.bones.find(b => b.name === sceneObject.bindBone)
@@ -165,7 +161,7 @@ const Attachable = React.memo(({ gltf, sceneObject, isSelected, updateObject, ch
     }, [character.x, character.y, character.z, character.rotation, character.height, character.skeleton])
 
     const rebindAttachable = () => {
-      characterObject.current = scene.__interaction.filter(child => child.userData.id === sceneObject.attachToId)[0]
+      characterObject.current = getSceneInteractions(scene).filter(child => child.userData.id === sceneObject.attachToId)[0]
       if(!characterObject.current ) return
       
       let skinnedMesh = characterObject.current.getObjectByProperty("type", "SkinnedMesh")

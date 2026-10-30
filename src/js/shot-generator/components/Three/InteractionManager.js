@@ -1,6 +1,7 @@
+const getSceneInteractions = require('../../../utils/scene-interactions')
 import { connect, batch } from 'react-redux'
 import React, { useRef, useCallback, useLayoutEffect, useState, useMemo, useEffect } from 'react'
-import { useThree } from 'react-three-fiber'
+import { useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useDraggingManager } from '../../hooks/use-dragging-manager'
 import '../../../shared/IK/utils/Object3dExtension'
@@ -133,7 +134,7 @@ const InteractionManager = connect(
     }, [])
     
     const filterIntersectables = () => {
-        intersectables.current = scene.__interaction
+        intersectables.current = getSceneInteractions(scene)
         intersectables.current = intersectables.current.concat(scene.children[0].children.filter(o => 
             o.userData.type === 'controlTarget' ||
             o.userData.type === 'controlPoint' || 
@@ -360,7 +361,7 @@ const InteractionManager = connect(
           endDrag(updateObjects)
           unblockObject(dragTarget.target.userData.id)
           if(dragTarget.target.userData.type === "character") {
-            let attachables = scene.__interaction.filter(object => object.userData.bindedId === dragTarget.target.userData.id)
+            let attachables = getSceneInteractions(scene).filter(object => object.userData.bindedId === dragTarget.target.userData.id)
             withState((dispatch, state) => {
               batch(() => {
                 for(let i = 0; i < attachables.length; i ++) {

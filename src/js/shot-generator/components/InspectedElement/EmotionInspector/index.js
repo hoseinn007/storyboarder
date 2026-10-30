@@ -73,7 +73,7 @@ const writeEmotionPresets = () => {
 }
 
 const emotionPresetFactory = ({ name, priority = 0 }) => ({
-  id: THREE.Math.generateUUID(),
+  id: THREE.MathUtils.generateUUID(),
   name,
   priority
 })
@@ -206,7 +206,7 @@ const machine = Machine({
     prompt: {
       entry: assign((context, event) => {
         let basename = path.basename(context.source, path.extname(context.source))
-        let placeholder = `${basename}-${shortId(THREE.Math.generateUUID())}`
+        let placeholder = `${basename}-${shortId(THREE.MathUtils.generateUUID())}`
         return {
           placeholder,
           name: placeholder

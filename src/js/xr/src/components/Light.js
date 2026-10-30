@@ -1,4 +1,4 @@
-const { useUpdate } = require('react-three-fiber')
+const useUpdate = require('../../../hooks/use-three-update')
 const { useMemo } = require('react')
 
 const VirtualCamera = require('../components/VirtualCamera')

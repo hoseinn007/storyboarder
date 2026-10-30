@@ -1,3 +1,4 @@
+const getSceneInteractions = require('../utils/scene-interactions')
 import { connect } from 'react-redux'
 import ModelObject from '../shot-generator/components/Three/ModelObject'
 import Environment from '../shot-generator/components/Three/Environment'
@@ -11,7 +12,7 @@ import {
 
  } from '../shared/reducers/shot-generator'
  import systemEmotionPresets from '../shared/reducers/shot-generator-presets/emotions.json'
-import { useThree } from 'react-three-fiber'
+import { useThree } from '@react-three/fiber'
 import ModelLoader from '../services/model-loader'
 import Character from './Character'
 import Attachable from './Attachable'
@@ -94,7 +95,7 @@ const ShotExplorerSceneManager = connect(
 
     useEffect(() => { 
       setLargeCanvasData(camera, scene, gl)
-    }, [scene.__interaction.length, camera, gl])
+    }, [getSceneInteractions(scene).length, camera, gl])
 
     const groundTexture = useTextureLoader(window.__dirname + '/data/shot-generator/grid_floor_1.png')
     const roomTexture = useTextureLoader(window.__dirname + '/data/shot-generator/grid_wall2.png')

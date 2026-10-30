@@ -10,7 +10,7 @@ const path = require('path')
 const shotExplorer = require('../shot-explorer/setup')
 const { Suspense } = React = require('react')
 const { Provider, connect } = require('react-redux')
-const ReactDOM = require('react-dom')
+const ReactRoot = require('../../utils/react-root')
 const { ActionCreators } = require('redux-undo')
 //console.clear() // clear the annoying dev tools warning
 const log = require('../../shared/storyboarder-electron-log')
@@ -354,7 +354,7 @@ window.$r = { store }
 
 log.info('ready!')
 
-ReactDOM.render(
+ReactRoot.render(
     <Provider store={ store }>
       <I18nextProvider i18n={ i18n }>
         <Suspense fallback="loading">

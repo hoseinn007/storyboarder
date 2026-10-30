@@ -1,5 +1,5 @@
 import React, {useEffect, useRef} from 'react'
-import {useFrame, useThree} from "react-three-fiber"
+import {useFrame, useThree} from "@react-three/fiber"
 
 import store from './../helpers/store'
 import {selectObject, updateObject} from "../../../shared/reducers/shot-generator"
@@ -40,7 +40,7 @@ const useHitTestManager = (selectEnabled) => {
       if (intersects.length) {
         const target = getObject(intersects[0].object)
 
-        let inverse = new THREE.Matrix4().getInverse(camera.matrixWorld)
+        let inverse = new THREE.Matrix4().copy(camera.matrixWorld).invert()
 
         target.updateWorldMatrix( false, false )
         target.matrixAutoUpdate = false
@@ -89,7 +89,7 @@ const useHitTestManager = (selectEnabled) => {
     if (selectEnabled && targetRef.current) {
       gl.xr.getCamera(camera)
       targetRef.current.matrixWorld.multiplyMatrices(camera.matrixWorld, initialMatrix.current)
-      targetRef.current.matrix.getInverse(targetRef.current.parent.matrixWorld).multiply(targetRef.current.matrixWorld)
+      targetRef.current.matrix.copy(targetRef.current.parent.matrixWorld).invert().multiply(targetRef.current.matrixWorld)
 
       if (targetRef.current.userData.type === 'character') {
         targetRef.current.matrix.decompose(targetRef.current.position, quaternion.current, targetRef.current.scale)

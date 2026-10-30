@@ -282,7 +282,7 @@ describe('reducer', () => {
     })
 
     it('sets up the store properly', () => {
-      state = store.getState()
+      const state = store.getState()
 
       assert(state.undoable.present.sceneObjects)
       assert(Object.keys(state.attachments).length === 0)
@@ -309,7 +309,7 @@ describe('reducer', () => {
         }
       })
 
-      state = store.getState()
+      const state = store.getState()
       assert.equal(state.undoable.past.length, 2)
 
       // five related changes

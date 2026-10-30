@@ -93,7 +93,7 @@ function vectorToDefaultCoordSystem(vector)
     let y_Axis = new three.Vector3(0, 1, 0);
     let z_Axis = new three.Vector3(0, 0, 1);
     let tbn = new three.Matrix4().makeBasis(x_Axis, y_Axis, z_Axis);
-    let inverseTbn = new three.Matrix4().getInverse(tbn);
+    let inverseTbn = new three.Matrix4().copy(tbn).invert();
     vector.applyMatrix4(inverseTbn);
 }
 
@@ -350,7 +350,7 @@ var slicedToArray = function () {
 
 const jointSpace = new three.Matrix4();
 jointSpace.makeBasis(X_AXIS, Y_AXIS, Z_AXIS);
-const inversedJointSpace = new three.Matrix4().getInverse(jointSpace);
+const inversedJointSpace = new three.Matrix4().copy(jointSpace).invert();
 var DEG2RAD = three.Math.DEG2RAD;
 var RAD2DEG = three.Math.RAD2DEG;
 var IKBallConstraint = function () {
@@ -522,7 +522,7 @@ var IKJoint = function () {
     key: '_worldToLocalDirection',
     value: function _worldToLocalDirection(direction) {
       if (this.bone.parent) {
-        var inverseParent = new three.Matrix4().getInverse(this.bone.parent.matrixWorld);
+        var inverseParent = new three.Matrix4().copy(this.bone.parent.matrixWorld).invert();
         direction.transformDirection(inverseParent);
       }
       return direction;
@@ -539,7 +539,7 @@ var IKJoint = function () {
         this._updateMatrixWorld();
         let worldMatrix = this.bone.parent.matrixWorld;
 
-        var inverseParent = new three.Matrix4().getInverse(worldMatrix);
+        var inverseParent = new three.Matrix4().copy(worldMatrix).invert();
 
         position.applyMatrix4(inverseParent);
         let parentGlobal = new three.Vector3();
@@ -1016,7 +1016,7 @@ var BoneHelper = function (_Object3D) {
   inherits(BoneHelper, _Object3D);
   function BoneHelper(height, boneSize, axesSize) {
     classCallCheck(this, BoneHelper);
-    var _this = possibleConstructorReturn(this, (BoneHelper.__proto__ || Object.getPrototypeOf(BoneHelper)).call(this));
+    var _this = possibleConstructorReturn(this, Reflect.construct(Object.getPrototypeOf(BoneHelper), [], BoneHelper));
     if (height !== 0) {
       var geo = new three.ConeBufferGeometry(boneSize, height, 4);
       geo.applyMatrix4(new three.Matrix4().makeRotationAxis(new three.Vector3(1, 0, 0), Math.PI / 2));
@@ -1048,7 +1048,7 @@ var IKHelper = function (_Object3D2) {
         axesSize = _ref.axesSize,
         wireframe = _ref.wireframe;
     classCallCheck(this, IKHelper);
-    var _this2 = possibleConstructorReturn(this, (IKHelper.__proto__ || Object.getPrototypeOf(IKHelper)).call(this));
+    var _this2 = possibleConstructorReturn(this, Reflect.construct(Object.getPrototypeOf(IKHelper), [], IKHelper));
     boneSize = boneSize || 0.1;
     axesSize = axesSize || 0.2;
     if (!ik.isIK) {

@@ -57,7 +57,7 @@ class PoleConstraint extends IkConstraint
         let TBN = new THREE.Matrix4().makeBasis(xAxis, yAxis, zAxis);
 
         // Inverse projection matrix so our projection facing it's normal direction
-        let inversedTBN = new THREE.Matrix4().getInverse(TBN);
+        let inversedTBN = new THREE.Matrix4().copy(TBN).invert();
         // Project our joint direction on to reversed projection
         let boneDirectionProjected = new THREE.Vector3().copy(direction).applyMatrix4(inversedTBN);
         // Save current radius for cause when direction length changes
@@ -68,7 +68,7 @@ class PoleConstraint extends IkConstraint
         let angle = boneDirectionXZ.angle(); 
         // Calculate current direction angle to positive xAxis and adding PoleAngle
         // We making angle negative in order to move our object to xAxis zero
-        let angleToPlane = -angle + (THREE.Math.DEG2RAD * this.poleAngle);
+        let angleToPlane = -angle + (THREE.MathUtils.DEG2RAD * this.poleAngle);
         // Rotate direction around origin by angle
         boneDirectionXZ.rotateAround(new THREE.Vector2(0, 0), angleToPlane);
         // Sets original x to changed direction x

@@ -1,5 +1,5 @@
 const { useState, useEffect, useRef, useContext } = React = require('react')
-const ReactDOM = require('react-dom')
+const ReactRoot = require('../../../src/js/utils/react-root')
 
 const h = require('../../../src/js/utils/h')
 
@@ -47,7 +47,7 @@ const TestUI = props => {
   ])
 }
 
-ReactDOM.render(
+ReactRoot.render(
   h([
     TestUI
   ]),

@@ -10,7 +10,7 @@ import {
   updateObjects,
   setActiveCamera
 } from '../shared/reducers/shot-generator'
-import { useThree, useFrame } from 'react-three-fiber'
+import { useThree, useFrame } from '@react-three/fiber'
 import IconsComponent from './components/IconsComponent'
 import CameraIcon from './components/Three/Icons/CameraIcon'
 import useFontLoader from './hooks/use-font-loader'

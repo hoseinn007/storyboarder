@@ -1,3 +1,4 @@
+const getSceneInteractions = require('../../utils/scene-interactions')
 import * as THREE from 'three'
 import React, { useCallback, useRef } from 'react'
 
@@ -37,7 +38,7 @@ const useDraggingManager = (useIcons) => {
       // remember the offsets of every selected object
       if ( raycaster.current.ray.intersectPlane( plane.current, intersection.current ) ) {
         if ( target.userData.type === 'attachable' ) {
-          let child = scene.__interaction.find( child => child.userData.id === target.userData.id )
+          let child = getSceneInteractions(scene).find( child => child.userData.id === target.userData.id )
           let vectorPos = child.worldPosition()
           offsets.current[target.userData.id] = new THREE.Vector3().copy( intersection.current ).sub( vectorPos )
           return;
@@ -84,7 +85,7 @@ const useDraggingManager = (useIcons) => {
               if(isRotation && target.userData.type === "character" && selections.length === 1) {
                 let delta = prevMouse.current.x - mouse.x 
                 let direction = -1
-                let rotationSpeed = Math.sign(delta) * ( THREE.Math.DEG2RAD * (Math.abs(delta) * 180))
+                let rotationSpeed = Math.sign(delta) * ( THREE.MathUtils.DEG2RAD * (Math.abs(delta) * 180))
                 let newRotation = target.rotation.y + ((rotationSpeed) * direction)
                 objectChanges.current[selection] = { rotation: newRotation }
                 target.rotation.y = newRotation

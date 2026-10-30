@@ -10,6 +10,7 @@ module.exports = {
   },
   module: {
     rules: [
+      { test: /\.mjs$/, type: 'javascript/auto' },
       {
         // Lower PeerJS private fields for Webpack 4 using installed Babel.
         test: /\.m?js$/,

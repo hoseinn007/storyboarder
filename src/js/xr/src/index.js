@@ -11,7 +11,7 @@ const {
   applyMiddleware
 } = require('redux')
 
-const ReactDOM = require('react-dom')
+const ReactRoot = require('../../utils/react-root')
 
 const {Provider} = require('react-redux')
 
@@ -79,7 +79,7 @@ const App = () => {
   )
 }
 
-ReactDOM.render(
+ReactRoot.render(
   <App/>,
   document.getElementById('main')
 )

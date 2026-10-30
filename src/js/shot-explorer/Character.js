@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react'
 import * as THREE from 'three'
-import { useUpdate, useThree} from 'react-three-fiber'
+import { useThree } from '@react-three/fiber'
+import useUpdate from '../hooks/use-three-update'
 import cloneGltf from '../shot-generator/helpers/cloneGltf'
 import SGIkHelper from '../shared/IK/SGIkHelper'
 import {useAsset} from '../shot-generator/hooks/use-assets-manager'

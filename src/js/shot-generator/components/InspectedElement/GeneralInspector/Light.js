@@ -15,8 +15,8 @@ const LightInspector = React.memo(({updateObject, sceneObject}) => {
   const setDecay = useCallback((decay) => updateObject(id, {decay}), [])
 
   const setAngle = useCallback((angle) => updateObject(id, {angle: _Math.degToRad(angle)}), [])
-  const setRotation = useCallback((value) => updateObject(id, {rotation: THREE.Math.degToRad(value)}), [])
-  const setTilt = useCallback((value) => updateObject(id, {tilt: THREE.Math.degToRad(value)}), [])
+  const setRotation = useCallback((value) => updateObject(id, {rotation: THREE.MathUtils.degToRad(value)}), [])
+  const setTilt = useCallback((value) => updateObject(id, {tilt: THREE.MathUtils.degToRad(value)}), [])
 
   return (
     <React.Fragment>

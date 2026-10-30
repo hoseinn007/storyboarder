@@ -3,7 +3,7 @@ const { clamp, mapLinear } = require('three').Math
 const { useMemo, useRef, useCallback, useEffect } = React = require('react')
 const useReduxStore = require('react-redux').useStore
 const { useSelector } = require('react-redux')
-const { useThree } = require('react-three-fiber')
+const { useThree } = require('@react-three/fiber')
 const { useMachine } = require('@xstate/react')
 
 const { log } = require('../../components/Log')
@@ -67,7 +67,7 @@ const [useUiStore] = create((set, get) => ({
 const steps = (value, step) => parseFloat((Math.round(value * (1 / step)) * step).toFixed(6))
 
 const lensFactory = (min, max, step = 0.05) => R.lens(
-  from => THREE.Math.mapLinear(from, min, max, 0, 1),
+  from => THREE.MathUtils.mapLinear(from, min, max, 0, 1),
   to => {
     let value = mapLinear(to, 0, 1, min, max)
     value = steps(value, step)
@@ -402,7 +402,7 @@ class CanvasRenderer {
               lens: R.compose(R.lensPath(['intensity']), lenses.intensity)
             },
             angle: {
-              label: `${t('xr.controls.angle')} - ${rounded(THREE.Math.radToDeg(sceneObject.angle), 1)}°`,
+              label: `${t('xr.controls.angle')} - ${rounded(THREE.MathUtils.radToDeg(sceneObject.angle), 1)}°`,
               lens: R.compose(R.lensPath(['angle']), lenses.angle)
             },
             distance: {
@@ -1012,8 +1012,8 @@ class CanvasRenderer {
   //   //   // TODO when dragging, set to a function which modifies local THREE object
   //   //   //      when dropping, set to a function which dispatches to store
   //   //   let setCharacterRotation = value => {
-  //   //     let rotation = mappers.toRotation(THREE.Math.clamp(value, 0, 1))
-  //   //     rotation = steps(rotation, THREE.Math.DEG2RAD)
+  //   //     let rotation = mappers.toRotation(THREE.MathUtils.clamp(value, 0, 1))
+  //   //     rotation = steps(rotation, THREE.MathUtils.DEG2RAD)
 
   //   //     this.dispatch(
   //   //       updateObject(
@@ -1383,7 +1383,7 @@ const useUiManager = ({ playSound, stopSound, SG }) => {
 
         onAddObject (context, event) {
           const { object } = event
-          const id = THREE.Math.generateUUID()
+          const id = THREE.MathUtils.generateUUID()
 
           let offsetVector = new THREE.Vector3(0, 0, -2)
           if (object === 'camera') offsetVector.normalize()
@@ -1483,7 +1483,7 @@ const useUiManager = ({ playSound, stopSound, SG }) => {
 
         onDuplicate (context, event) {
           const { selections } = event
-          const id = THREE.Math.generateUUID()
+          const id = THREE.MathUtils.generateUUID()
           if (selections.length) {
             store.dispatch(duplicateObjects([selections[0]], [id]))
             playSound('create')

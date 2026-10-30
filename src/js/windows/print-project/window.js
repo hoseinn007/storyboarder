@@ -2,7 +2,7 @@ const { ipcRenderer } = require('electron')
 const remote = require('@electron/remote')
 const { interpret } = require('xstate')
 const React = require('react')
-const ReactDOM = require('react-dom')
+const ReactRoot = require('../../utils/react-root')
 const { mergeDeepRight } = require('ramda')
 
 const i18n = require('../../services/i18next.config')
@@ -95,7 +95,7 @@ const start = async () => {
   })
   .start()
 
-  ReactDOM.render(
+  ReactRoot.render(
     React.createElement(PrintApp, { service, canvas }),
     document.querySelector('.container')
   )

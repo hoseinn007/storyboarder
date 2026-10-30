@@ -1,9 +1,11 @@
+globalThis.IS_REACT_ACT_ENVIRONMENT = true
 /* global describe it beforeEach afterEach */
 require('@babel/register')({ presets: ['@babel/preset-env', '@babel/preset-react'] })
 const assert = require('assert')
 const React = require('react')
-const ReactDOM = require('react-dom')
-const { act, Simulate } = require('react-dom/test-utils')
+const ReactRoot = require('../../src/js/utils/react-root')
+const { act } = React
+const { Simulate } = require('react-dom/test-utils')
 const { Provider } = require('react-redux')
 const { createStore } = require('redux')
 const sg = require('../../src/js/shared/reducers/shot-generator')
@@ -31,12 +33,12 @@ describe('dynamic board authoring (renderer)', () => {
     root = document.createElement('div')
     root.style.cssText = 'position:relative;width:1000px;height:700px'
     document.body.appendChild(root)
-    act(() => { ReactDOM.render(React.createElement(Provider, { store }, React.createElement(DynamicBoard, {
+    act(() => { ReactRoot.render(React.createElement(Provider, { store }, React.createElement(DynamicBoard, {
       onSave: () => saves++, onInsert: () => inserts++
     })), root) })
   })
   afterEach(() => {
-    act(() => { ReactDOM.unmountComponentAtNode(root) })
+    act(() => { ReactRoot.unmount(root) })
     root.remove(); window.requestAnimationFrame = raf; window.cancelAnimationFrame = cancel
   })
   it('keeps hide/show visible and allows moving and resizing without editing the shot', async () => {

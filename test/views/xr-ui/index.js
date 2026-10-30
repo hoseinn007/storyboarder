@@ -1,13 +1,13 @@
 // ./scripts/run-xr-ui-canvas-test.sh
 const THREE = require('three')
 window.THREE = window.THREE || THREE
-const { Canvas, useThree } = require('react-three-fiber')
+const { Canvas, useThree } = require('@react-three/fiber')
 
 const { Provider, useSelector } = require('react-redux')
 const useReduxStore = require('react-redux').useStore
 const { useMemo, useRef, useState, useEffect } = React = require('react')
 
-const ReactDOM = require('react-dom')
+const ReactRoot = require('../../../src/js/utils/react-root')
 
 const { useStore, useStoreApi, useInteractionsManager } = require('../../../src/js/xr/src/use-interactions-manager')
 const { useUiStore, useUiManager, UI_ICON_FILEPATHS } = require('../../../src/js/xr/src/hooks/ui-manager')
@@ -187,7 +187,7 @@ const UITest = () => {
 
   return (
     <>
-      <Canvas>
+      <Canvas linear flat dpr={1}>
         <Provider store={store}>
           {
             ready
@@ -254,7 +254,7 @@ fetch('/xr.storyboarder')
       )
     }
 
-    ReactDOM.render(
+    ReactRoot.render(
       <Provider store={store}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <UITest />

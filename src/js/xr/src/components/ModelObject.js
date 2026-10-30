@@ -1,6 +1,6 @@
 const THREE = require('three')
 const { useMemo, useEffect } = React = require('react')
-const { useUpdate } = require('react-three-fiber')
+const useUpdate = require('../../../hooks/use-three-update')
 
 const getFilepathForModelByType = require('../helpers/get-filepath-for-model-by-type')
 

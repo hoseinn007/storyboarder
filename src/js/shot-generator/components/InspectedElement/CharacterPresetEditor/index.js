@@ -156,7 +156,7 @@ const CharacterPresetsEditor = connect(
     }, [id])
 
     const addNewCharacterPreset = useCallback((name) => {
-      let id = THREE.Math.generateUUID()
+      let id = THREE.MathUtils.generateUUID()
       let attachables = getAttachables()
      
       createCharacterPreset({
@@ -168,7 +168,7 @@ const CharacterPresetsEditor = connect(
     }, [getSceneObject()])
 
     const onCreateCharacterPresetClick = () => {
-      newGeneratedId.current = "Character " + shortId(THREE.Math.generateUUID())
+      newGeneratedId.current = "Character " + shortId(THREE.MathUtils.generateUUID())
       newPresetName.current = newGeneratedId.current
       showModal(true)
     }
@@ -259,7 +259,7 @@ const initializeAttachables = (sceneObject, preset) => {
 
       let newAttachable = {}
       newAttachable.attachToId = sceneObject.id
-      newAttachable.id = THREE.Math.generateUUID()
+      newAttachable.id = THREE.MathUtils.generateUUID()
       newAttachable.loaded = false
       newAttachable.model = attachable.model
       newAttachable.name = attachable.name

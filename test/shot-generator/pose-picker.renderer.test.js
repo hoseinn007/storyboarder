@@ -1,9 +1,11 @@
+globalThis.IS_REACT_ACT_ENVIRONMENT = true
 /* global describe it beforeEach afterEach */
 require('@babel/register')({ presets: ['@babel/preset-env', '@babel/preset-react'] })
 const assert = require('assert')
 const React = require('react')
-const ReactDOM = require('react-dom')
-const { act, Simulate } = require('react-dom/test-utils')
+const ReactRoot = require('../../src/js/utils/react-root')
+const { act } = React
+const { Simulate } = require('react-dom/test-utils')
 const PosePicker = require('../../src/js/shot-generator/components/PosePicker').default
 const { filterPoses } = require('../../src/js/shot-generator/components/PosePicker')
 const presets = [
@@ -21,12 +23,12 @@ describe('expanded pose picker (renderer)', () => {
     style = document.createElement('style')
     style.textContent = '.pose-picker__gallery {width:744px;height:420px;overflow-y:auto} .pose-picker {width:800px;height:600px}'
     document.head.appendChild(style)
-    act(() => { ReactDOM.render(React.createElement(PosePicker, {
+    act(() => { ReactRoot.render(React.createElement(PosePicker, {
       presets, ItemComponent: Item, itemData: {}, onClose: () => closes++
     }), root) })
   })
   afterEach(() => {
-    act(() => { ReactDOM.unmountComponentAtNode(root) })
+    act(() => { ReactRoot.unmount(root) })
     root.remove(); style.remove()
   })
   it('opens a separate gallery and searches names and keywords together', () => {

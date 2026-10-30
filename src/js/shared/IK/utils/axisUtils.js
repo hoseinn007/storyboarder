@@ -53,7 +53,7 @@ function calculatePoleAngle(rootBone, endBone, poleBone, rootJoint)
     let direction = rootBone.getWorldDirectionTo(rootBone.children[0]);
     let originalDirection = direction.clone();
 
-    let inversedTBN = new THREE.Matrix4().getInverse(TBN);
+    let inversedTBN = new THREE.Matrix4().copy(TBN).invert();
     let boneDirectionProjected = new THREE.Vector3().copy(direction).applyMatrix4(inversedTBN);
     let projecPoleFlat = new THREE.Vector2(projectedPole.x, projectedPole.z);
     let boneDirectionProjectedFlat = new THREE.Vector2(boneDirectionProjected.x, boneDirectionProjected.z);

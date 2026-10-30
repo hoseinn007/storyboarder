@@ -1,5 +1,5 @@
 const { Suspense, useRef, useEffect } = React = require('react')
-const { useService } = require('@xstate/react')
+const { useActor } = require('@xstate/react')
 const { useTranslation } = require('react-i18next')
 
 const h = require('../../utils/h')
@@ -509,7 +509,7 @@ const InputControlsView = ({
 }
 
 const PrintApp = ({ service, canvas }) => {
-  const [state, send] = useService(service)
+  const [state, send] = useActor(service)
 
   const onClose = () => send('CLOSE')
 

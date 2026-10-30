@@ -19,7 +19,7 @@ THREE.Object3D.prototype.localToWorldQuaternion = function (quaternion)
 THREE.Object3D.prototype.getInverseMatrix = function ()
 {
     let matrix = new THREE.Matrix4();
-    matrix.getInverse(this.matrix);
+    matrix.copy(this.matrix).invert();
     return matrix;
 }
 
@@ -27,7 +27,7 @@ THREE.Object3D.prototype.getInverseMatrixWorld = function ()
 {
     let matrix = new THREE.Matrix4();
 
-    matrix.getInverse(this.matrixWorld);
+    matrix.copy(this.matrixWorld).invert();
     return matrix;
 }
 THREE.Object3D.prototype.worldPosition = function()
@@ -151,7 +151,7 @@ THREE.Vector3.prototype.substract = function(vector)
 
 THREE.Matrix4.prototype.inverse = function()
 {
-    let matrix = new THREE.Matrix4().getInverse(this);
+    let matrix = new THREE.Matrix4().copy(this).invert();
     return matrix;
 }
 

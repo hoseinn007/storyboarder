@@ -1,5 +1,5 @@
 const { useMemo, useRef, useEffect, useCallback } = React = require('react')
-const { useFrame } = require('react-three-fiber')
+const { useFrame } = require('@react-three/fiber')
 
 const { log } = require('../../components/Log')
 const { useTranslation } = require('react-i18next')

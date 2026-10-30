@@ -1,5 +1,5 @@
 import React, {useContext, useCallback, useState} from 'react'
-import Fade from 'react-reveal/Fade'
+import Fade from '../Fade'
 
 import {SceneState} from "../../helpers/sceneState"
 

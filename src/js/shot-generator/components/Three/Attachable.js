@@ -1,6 +1,9 @@
+const getSceneInteractions = require('../../../utils/scene-interactions')
 import React, { useMemo, useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
-import { useUpdate, useThree } from 'react-three-fiber'
+import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils'
+import { useThree } from '@react-three/fiber'
+import useUpdate from '../../../hooks/use-three-update'
 import {useAsset} from '../../hooks/use-assets-manager'
 import {SHOT_LAYERS} from '../../utils/ShotLayers'
 import isUserModel from '../../helpers/isUserModel'
@@ -20,7 +23,7 @@ const materialFactory = () => patchMaterial(new THREE.MeshToonMaterial({
 }))
 
 const meshFactory = source => {
-  let mesh = source.isSkinnedMesh ? THREE.SkeletonUtils.clone(source) : source.clone()
+  let mesh = source.isSkinnedMesh ? cloneSkeleton(source) : source.clone()
 
   let material = materialFactory()
 
@@ -77,7 +80,7 @@ const Attachable = React.memo(({ path, sceneObject, isSelected, updateObject, с
       return null
     }, [gltf, characterModel])
 
-    const sceneCharacter = scene.__interaction.filter(o => o.userData.id === sceneObject.attachToId)[0]
+    const sceneCharacter = getSceneInteractions(scene).filter(o => o.userData.id === sceneObject.attachToId)[0]
     const length = sceneCharacter && sceneCharacter.children.length
     useEffect(() => {
       setCharacterChildrenLength(length)
@@ -116,7 +119,7 @@ const Attachable = React.memo(({ path, sceneObject, isSelected, updateObject, с
 
     useEffect(() => {  
       if(!(characterChildrenLength > 0)) return
-      let object = scene.__interaction.filter(o => o.userData.id === sceneObject.attachToId)[0]
+      let object = getSceneInteractions(scene).filter(o => o.userData.id === sceneObject.attachToId)[0]
       let lod = object.getObjectByProperty("type", "LOD")
       setCharacterLOD(lod)
     }, [characterChildrenLength])
@@ -130,12 +133,6 @@ const Attachable = React.memo(({ path, sceneObject, isSelected, updateObject, с
       if(!ref.current || !characterObject.current ) return
       rebindAttachable()
     }, [sceneObject.bindBone])
-
-    useEffect(() => {
-      if(!ref.current) return 
-      let index = scene.__interaction.indexOf(ref.current)
-      if (index === -1) scene.__interaction.push(ref.current) 
-    }, [characterModel])
 
     useEffect(() => {
       if(!characterModel || !characterLOD || !isAllowedToInitialize || characterObject.current) return 
@@ -268,7 +265,7 @@ const Attachable = React.memo(({ path, sceneObject, isSelected, updateObject, с
     }, [sceneObject.rotation, characterLOD])
 
     const rebindAttachable = () => {
-      characterObject.current = scene.__interaction.filter(child => child.userData.id === sceneObject.attachToId)[0]
+      characterObject.current = getSceneInteractions(scene).filter(child => child.userData.id === sceneObject.attachToId)[0]
       if(!characterObject.current ) return
       
       let skinnedMesh = characterObject.current.getObjectByProperty("type", "SkinnedMesh")

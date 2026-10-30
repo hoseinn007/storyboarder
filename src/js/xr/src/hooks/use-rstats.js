@@ -1,4 +1,4 @@
-const { useThree, useFrame } = require('react-three-fiber')
+const { useThree, useFrame } = require('@react-three/fiber')
 const { useRef, useMemo } = React = require('react')
 
 const rStats = require('../../vendor/rStats.js')

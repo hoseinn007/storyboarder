@@ -44,7 +44,7 @@ const shortBaseName = (filepath) =>
 
 const createSceneObjectForAttachable = () => {
   return {
-    id: THREE.Math.generateUUID(),
+    id: THREE.MathUtils.generateUUID(),
 
     type: 'attachable',
     attachableType: 'hair',

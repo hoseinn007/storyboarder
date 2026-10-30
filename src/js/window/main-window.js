@@ -16,7 +16,7 @@ const CAF = require('caf')
 const isDev = remote.require('electron-is-dev')
 const log = require('../shared/storyboarder-electron-log')
 log.catchErrors()
-const ReactDOM = require('react-dom')
+const ReactRoot = require('../utils/react-root')
 const h = require('../utils/h')
 const ShotGeneratorPanel = require('./components/ShotGeneratorPanel')
 
@@ -3666,7 +3666,7 @@ const renderShotGeneratorPanel = () => {
     ipcRenderer.send('shot-generator:open')
   }
 
-  ReactDOM.render(
+  ReactRoot.render(
     h([ShotGeneratorPanel, { thumbnail, aspectRatio, onOpen }]),
     document.querySelector('#shot-generator-container')
   )
@@ -6842,7 +6842,7 @@ const TimelineModeControlView = ({ mode = 'sequence', show = false }) => {
 }
 const renderTimelineModeControlView = ({ show = false }) => {
   let mode = topPlansMode ? 'top-plans' : shouldRenderThumbnailDrawer ? 'sequence' : 'time'
-  ReactDOM.render(
+  ReactRoot.render(
     h([TimelineModeControlView, { mode, show }]),
     document.getElementById('timeline-mode-control-view')
   )

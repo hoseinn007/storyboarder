@@ -1,5 +1,5 @@
 import Peer from 'peerjs'
-import Packer from 'peerjs-js-binarypack'
+import { unpack } from 'peerjs-js-binarypack'
 import { STBR_HOST } from './config'
 
 const EventEmitter = require('events')
@@ -16,7 +16,7 @@ const Client = (connection) => {
          */
         if (msg instanceof Blob) {
             msg.arrayBuffer().then(buf => {
-                const {action, payload} = Packer.unpack(buf)
+                const {action, payload} = unpack(buf)
                 emitter.emit(action, payload)
             })
         } else {

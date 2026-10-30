@@ -1,6 +1,7 @@
 import React, { useRef, useMemo, useState, useEffect, useLayoutEffect } from 'react'
 import * as THREE from 'three'
-import { useUpdate, useThree } from 'react-three-fiber'
+import { useThree } from '@react-three/fiber'
+import useUpdate from '../../../hooks/use-three-update'
 import cloneGltf from '../../helpers/cloneGltf'
 import SGIkHelper from '../../../shared/IK/SGIkHelper'
 import BonesHelper from '../../../xr/src/three/BonesHelper'
@@ -235,7 +236,7 @@ const Character = React.memo(({ path, sceneObject, modelSettings, isSelected, se
       let changedSkeleton = []
       ref.current.updateWorldMatrix(true, true)
       let inverseMatrixWorld = new THREE.Matrix4()
-      inverseMatrixWorld.getInverse(ref.current.matrixWorld)
+      inverseMatrixWorld.copy(ref.current.matrixWorld).invert()
       let position = new THREE.Vector3()
       for(let i = 0; i < skeleton.bones.length; i++) {
         let bone = skeleton.bones[i]

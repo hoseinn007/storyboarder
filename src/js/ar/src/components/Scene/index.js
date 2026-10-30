@@ -1,6 +1,6 @@
 import React, {useState, useContext} from 'react'
 import {connect} from "react-redux"
-import {useFrame} from "react-three-fiber"
+import {useFrame} from "@react-three/fiber"
 
 import {SGConnection} from "../../helpers/store"
 

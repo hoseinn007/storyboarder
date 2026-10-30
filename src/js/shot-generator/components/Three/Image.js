@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import React, { useEffect, useMemo, useRef } from 'react'
-import { extend } from 'react-three-fiber'
+import { extend } from '@react-three/fiber'
 import { useAsset } from '../../hooks/use-assets-manager'
 import { SHOT_LAYERS } from '../../utils/ShotLayers'
 import RoundedBoxGeometryCreator from './../../../vendor/three-rounded-box'

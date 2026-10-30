@@ -108,8 +108,8 @@ describe('dynamic boards', () => {
     near(evaluate(1000).skeleton.Spine.rotation.z, 0.5)
     near(evaluate(2000).skeleton.Spine.rotation.z, 1)
     near(evaluate(1000).handSkeleton.Thumb.rotation.z, 0.4)
-    // Changing source objects cannot modify a captured pose snapshot.
-    start.Spine.rotation.z = 9
+    // Immer freezes dispatched poses; mutation must fail without changing a snapshot.
+    assert.throws(() => { start.Spine.rotation.z = 9 }, TypeError)
     near(evaluate(0).skeleton.Spine.rotation.z, 0)
     store.dispatch(ActionCreators.undo())
     near(evaluate(2000).skeleton.Spine.rotation.z, 0)

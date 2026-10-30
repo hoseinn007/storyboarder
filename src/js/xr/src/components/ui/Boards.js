@@ -1,5 +1,5 @@
 const { useEffect, useMemo, useRef, useCallback } = React = require('react')
-const { useFrame, useThree } = require('react-three-fiber')
+const { useFrame, useThree } = require('@react-three/fiber')
 const { useTranslation } = require('react-i18next')
 const SCALE = 1
 const POSITION = [0, 0, 0]
@@ -54,9 +54,8 @@ const Boards = React.memo(({ mode, locked, getCanvasRenderer, showConfirm, showS
     popupGeo.attributes.uv.array[5] = popupGeo.attributes.uv.array[7] = (430 + 18 * 3) / 1024
     popupGeo.attributes.uv.array[2] = popupGeo.attributes.uv.array[6] = (118 + 168 + 18 * 4 + 15) / 1024
 
-    hudGeo = new THREE.Geometry().fromBufferGeometry(hudGeo)
-    settingsGeo = new THREE.Geometry().fromBufferGeometry(settingsGeo).translate((1024 - 439) / 1024 * 0.5, 0.345, 0)
-    popupGeo = new THREE.Geometry().fromBufferGeometry(popupGeo).translate((1024 - (118 + 168 + 18 * 4 + 15)) / 1024 * -0.5, 0.31, 0)
+    settingsGeo = settingsGeo.translate((1024 - 439) / 1024 * 0.5, 0.345, 0)
+    popupGeo = popupGeo.translate((1024 - (118 + 168 + 18 * 4 + 15)) / 1024 * -0.5, 0.31, 0)
 
     const material = new THREE.MeshBasicMaterial({
       map: getTexture(),

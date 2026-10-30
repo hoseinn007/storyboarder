@@ -134,7 +134,7 @@ const Toolbar = connect(
     }
 
     const onCreateCameraClick = () => {
-      let id = THREE.Math.generateUUID()
+      let id = THREE.MathUtils.generateUUID()
 
       initCamera()
       undoGroupStart()
@@ -145,7 +145,7 @@ const Toolbar = connect(
     }
 
     const onCreateObjectClick = () => {
-      let id = THREE.Math.generateUUID()
+      let id = THREE.MathUtils.generateUUID()
       initCamera()
       undoGroupStart()
       createModelObject(id, camera.current, room.visible && roomObject3d)
@@ -154,7 +154,7 @@ const Toolbar = connect(
     }
 
     const onCreateCharacterClick = () => {
-      let id = THREE.Math.generateUUID()
+      let id = THREE.MathUtils.generateUUID()
       initCamera()
       undoGroupStart()
       createCharacter(id, camera.current, room.visible && roomObject3d)
@@ -163,7 +163,7 @@ const Toolbar = connect(
     }
 
     const onCreateLightClick = () => {
-      let id = THREE.Math.generateUUID()
+      let id = THREE.MathUtils.generateUUID()
       initCamera()
       undoGroupStart()
       createLight(id, camera.current, room.visible && roomObject3d)
@@ -172,7 +172,7 @@ const Toolbar = connect(
     }
 
     const onCreateVolumeClick = () => {
-      let id = THREE.Math.generateUUID()
+      let id = THREE.MathUtils.generateUUID()
       initCamera()
       undoGroupStart()
       createVolume(id, camera.current, room.visible && roomObject3d)
@@ -181,7 +181,7 @@ const Toolbar = connect(
     }
 
     const onCreateImageClick = () => {
-      let id = THREE.Math.generateUUID()
+      let id = THREE.MathUtils.generateUUID()
       initializeImage(id)
     }
 

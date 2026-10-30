@@ -109,19 +109,19 @@ const CameraPanelInspector = connect(
     let cameraState = { ...activeCamera }
     useEffect(() => {
       if(isDragging.current) return
-      cameraInfo.current.roll = Math.round(THREE.Math.radToDeg(activeCamera.roll))
+      cameraInfo.current.roll = Math.round(THREE.MathUtils.radToDeg(activeCamera.roll))
       setCameraRoll(cameraInfo.current.roll)
     }, [activeCamera.roll])
 
     useEffect(() => {
       if(isDragging.current) return
-      cameraInfo.current.rotation = Math.round(THREE.Math.radToDeg(activeCamera.rotation))
+      cameraInfo.current.rotation = Math.round(THREE.MathUtils.radToDeg(activeCamera.rotation))
       setCameraPan(cameraInfo.current.rotation)
     }, [activeCamera.rotation])
 
     useEffect(() => {
       if(isDragging.current) return
-      cameraInfo.current.tilt = Math.round(THREE.Math.radToDeg(activeCamera.tilt))
+      cameraInfo.current.tilt = Math.round(THREE.MathUtils.radToDeg(activeCamera.tilt))
       setCameraTilt(cameraInfo.current.tilt)
     }, [activeCamera.tilt])
 
@@ -160,8 +160,8 @@ const CameraPanelInspector = connect(
     const rollCamera = useCallback((event) => {
       let cameraState = activeCamera
       let roll = {
-        'z': Math.max(cameraState.roll - THREE.Math.DEG2RAD, -45 * THREE.Math.DEG2RAD),
-        'x': Math.min(cameraState.roll + THREE.Math.DEG2RAD, 45 * THREE.Math.DEG2RAD)
+        'z': Math.max(cameraState.roll - THREE.MathUtils.DEG2RAD, -45 * THREE.MathUtils.DEG2RAD),
+        'x': Math.min(cameraState.roll + THREE.MathUtils.DEG2RAD, 45 * THREE.MathUtils.DEG2RAD)
       }[event.key]
 
       updateObject(activeCamera.id, { roll })
@@ -213,8 +213,8 @@ const CameraPanelInspector = connect(
           cameraInfo.current.rotation = newPan
           cameraInfo.current.tilt = newTilt
 
-          let rotation = THREE.Math.degToRad(newPan)
-          let tilt = THREE.Math.degToRad(newTilt)
+          let rotation = THREE.MathUtils.degToRad(newPan)
+          let tilt = THREE.MathUtils.degToRad(newTilt)
 
           updateObject(activeCamera.id, {rotation, tilt})
         }
@@ -277,8 +277,8 @@ const CameraPanelInspector = connect(
             <div className="camera-item roll" {...rollTooltipEvents}>
                 <div className="camera-item-control">
                     <div className="row">
-                        <div className="camera-item-button" {...useLongPress(getValueShifter({ roll: -THREE.Math.DEG2RAD }))}><div className="arrow left"/></div>
-                        <div className="camera-item-button" {...useLongPress(getValueShifter({ roll: THREE.Math.DEG2RAD }))}><div className="arrow right"/></div>
+                        <div className="camera-item-button" {...useLongPress(getValueShifter({ roll: -THREE.MathUtils.DEG2RAD }))}><div className="arrow left"/></div>
+                        <div className="camera-item-button" {...useLongPress(getValueShifter({ roll: THREE.MathUtils.DEG2RAD }))}><div className="arrow right"/></div>
                     </div>
                 </div>
                 <div className="camera-item-label">{t("shot-generator.camera-panel.roll")}: { cameraRoll }°</div>
@@ -289,7 +289,7 @@ const CameraPanelInspector = connect(
                         <div className="pan-control" {...getCameraPanEvents()}><div className="pan-control-target"/></div>
                     </div>
                 </div>
-                <div className="camera-item-label">{t("shot-generator.camera-panel.pan")}: { Math.round(THREE.Math.radToDeg(activeCamera.rotation)) }° // {t("shot-generator.camera-panel.tilt")}: { Math.round(THREE.Math.radToDeg(activeCamera.tilt)) }°</div>
+                <div className="camera-item-label">{t("shot-generator.camera-panel.pan")}: { Math.round(THREE.MathUtils.radToDeg(activeCamera.rotation)) }° // {t("shot-generator.camera-panel.tilt")}: { Math.round(THREE.MathUtils.radToDeg(activeCamera.tilt)) }°</div>
             </div>
             <div className="camera-item move" {...moveTooltipEvents}>
                 <div className="camera-item-control">

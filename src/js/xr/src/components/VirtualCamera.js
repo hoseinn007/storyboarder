@@ -1,6 +1,7 @@
 const THREE = require('three')
 const { useMemo, useRef, useCallback, useEffect } = React = require('react')
-const { useFrame, useThree, useUpdate } = require('react-three-fiber')
+const { useFrame, useThree } = require('@react-three/fiber')
+const useUpdate = require('../../../hooks/use-three-update')
 require('../three/GPUPickers/utils/Object3dExtension')
 
 const traverseMeshMaterials = require('../helpers/traverse-mesh-materials')

@@ -1,3 +1,4 @@
+const getSceneInteractions = require('../utils/scene-interactions')
 import React, { useEffect, useCallback } from 'react' 
 import { ipcRenderer, shell } from 'electron'
 import path from 'path'
@@ -6,7 +7,7 @@ import moment from 'moment'
 
 import * as THREE from 'three'
 window.THREE = window.THREE || THREE
-import '../vendor/three/examples/js/exporters/GLTFExporter.js'
+import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter'
 import '../vendor/three/examples/js/utils/SkeletonUtils'
 import {gltfLoader} from '../shot-generator/utils/gltfLoader'
 import {
@@ -116,7 +117,7 @@ const useExportToGltf = (sceneRef, withState) => {
     })
     try {
       let scene = new THREE.Scene()
-      let attachables = sceneRef.__interaction.filter(object => object.userData.type === "attachable")
+      let attachables = getSceneInteractions(sceneRef).filter(object => object.userData.type === "attachable")
       let children = sceneRef.children[0].children.concat(attachables)
       for (let child of children) {
         if (child && child.visible) {
@@ -174,7 +175,7 @@ const useExportToGltf = (sceneRef, withState) => {
             scene.add(camera)
         }
       }
-      let exporter = new THREE.GLTFExporter()
+      let exporter = new GLTFExporter()
       let options = {
             binary: true,
             embedImages: true,

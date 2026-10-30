@@ -1,5 +1,5 @@
 
-const ReactDOM = require('react-dom')
+const ReactRoot = require('../../utils/react-root')
 const { ipcRenderer } = require('electron')
 const { Suspense } = React = require('react')
 const i18n = require('../../services/i18next.config')
@@ -9,7 +9,7 @@ ipcRenderer.on("languageChanged", (event, lng) => {
   i18n.changeLanguage(lng)
 })
 
-ReactDOM.render(
+ReactRoot.render(
     <Suspense fallback="loading">
       <LanguagePreferences/>
     </Suspense>

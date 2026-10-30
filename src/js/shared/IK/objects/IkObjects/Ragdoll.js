@@ -189,7 +189,7 @@ class Ragdoll extends IkObject
     {
         let hipsTarget = this.hipsControlTarget.target;
         let armatureInverseMatrixWorld = this.resourceManager.getMatrix4();
-        armatureInverseMatrixWorld.getInverse(this.rigMesh.skeleton.bones[0].parent.matrixWorld);
+        armatureInverseMatrixWorld.copy(this.rigMesh.skeleton.bones[0].parent.matrixWorld).invert();
 
         hipsTarget.applyMatrix4(this.rigMesh.skeleton.bones[0].parent.matrixWorld);
         let hipsWP = this.resourceManager.getVector3().copy(hipsTarget.position);
@@ -273,7 +273,7 @@ class Ragdoll extends IkObject
         let bone = chain.joints[0].bone.parent;
         let boneMatrix = this.resourceManager.getMatrix4();
         this.takeBoneInTheMeshSpace(this.rigMesh, bone, boneMatrix);
-        poleTarget.inverseMatrixOfBone = new THREE.Matrix4().getInverse(boneMatrix);
+        poleTarget.inverseMatrixOfBone = new THREE.Matrix4().copy(boneMatrix).invert();
         this.resourceManager.release(boneMatrix);
         poleTarget.target.updateMatrixWorld(true)
         return poleTarget;
@@ -456,7 +456,7 @@ class Ragdoll extends IkObject
     takeBoneInTheMeshSpace(mesh, bone, boneMatrix)
     {
         let armatureInverseMatrixWorld = this.resourceManager.getMatrix4();
-        armatureInverseMatrixWorld.getInverse(mesh.skeleton.bones[0].parent.matrixWorld);
+        armatureInverseMatrixWorld.copy(mesh.skeleton.bones[0].parent.matrixWorld).invert();
         boneMatrix.multiplyMatrices(armatureInverseMatrixWorld, bone.matrixWorld);
         this.resourceManager.release(armatureInverseMatrixWorld);
     }

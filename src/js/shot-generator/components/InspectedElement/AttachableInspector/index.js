@@ -105,7 +105,7 @@ const AttachableInspector = connect(
         modelData.rotation = { x:0, y:0, z:0 }
       }
 
-      let key = THREE.Math.generateUUID()
+      let key = THREE.MathUtils.generateUUID()
       let element = {
         id: key,
         type: 'attachable',

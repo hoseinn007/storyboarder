@@ -8,7 +8,7 @@ class RollRule extends ShotRule {
 
     applyRule() {
         super.applyRule();
-        let randomAngle = (getRandomNumber(30) + 5) * THREE.Math.DEG2RAD
+        let randomAngle = (getRandomNumber(30) + 5) * THREE.MathUtils.DEG2RAD
         let rot = new THREE.Euler().setFromQuaternion(this.camera.quaternion, "YXZ")
         let rotation = rot.y
         let tilt = rot.x

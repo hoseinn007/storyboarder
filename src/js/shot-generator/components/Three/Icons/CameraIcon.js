@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import IconSprites from '../../IconsComponent/IconSprites'
-import { useUpdate, useFrame } from 'react-three-fiber'
+import { useFrame } from '@react-three/fiber'
+import useUpdate from '../../../../hooks/use-three-update'
 import { SHOT_LAYERS } from '../../../utils/ShotLayers'
 
 const CameraIcon = React.memo(({type, text, secondText, sceneObject, fontMesh, mainCamera, ...props}) => {

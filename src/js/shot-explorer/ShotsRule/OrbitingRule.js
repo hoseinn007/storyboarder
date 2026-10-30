@@ -29,7 +29,7 @@ class OrbitingRule extends ShotRule {
     constructor(focusedCenter, character, camera) {
         super(focusedCenter, camera);
         this.character = character
-        this.angle = getOrbitingAngle() * THREE.Math.DEG2RAD + character.rotation.y;
+        this.angle = getOrbitingAngle() * THREE.MathUtils.DEG2RAD + character.rotation.y;
     }
 
     applyRule() {

@@ -4,7 +4,7 @@ const THREE = require('three')
 window.THREE = THREE
 
 const React = require('react')
-const ReactDOM = require('react-dom')
+const ReactRoot = require('../../../src/js/utils/react-root')
 const { Provider, connect } = require('react-redux')
 const h = require('../../../src/js/utils/h')
 
@@ -163,40 +163,40 @@ const createControls = ({ store }) => {
               ['strong', 'Orientation (Magnetometer)'],
                 [NumberSlider, {
                   label: 'alpha',
-                  value: THREE.Math.degToRad(remoteInput.mag[0]),
+                  value: THREE.MathUtils.degToRad(remoteInput.mag[0]),
                   onSetValue: () => {
                     let payload = [...remoteInput.mag]
-                    payload[0] = THREE.Math.radToDeg(parseFloat(event.target.value))
+                    payload[0] = THREE.MathUtils.radToDeg(parseFloat(event.target.value))
                     setInputMag(payload)
                   },
                   min: -Math.PI * 2,
                   max: Math.PI * 2,
                   step: Math.PI / 360,
-                  formatter: value => Math.round(value * THREE.Math.RAD2DEG).toString() + '°'
+                  formatter: value => Math.round(value * THREE.MathUtils.RAD2DEG).toString() + '°'
                 }],
                 [NumberSlider, {
                   label: 'beta',
-                  value: THREE.Math.degToRad(remoteInput.mag[1]),
+                  value: THREE.MathUtils.degToRad(remoteInput.mag[1]),
                   onSetValue: () => {
                     let payload = [...remoteInput.mag]
-                    payload[1] = THREE.Math.radToDeg(parseFloat(event.target.value))
+                    payload[1] = THREE.MathUtils.radToDeg(parseFloat(event.target.value))
                     setInputMag(payload)
                   },
                   min: -Math.PI,
                   max: Math.PI,
-                  formatter: value => Math.round(value * THREE.Math.RAD2DEG).toString() + '°'
+                  formatter: value => Math.round(value * THREE.MathUtils.RAD2DEG).toString() + '°'
                 }],
                 [NumberSlider, {
                   label: 'gamma',
-                  value: THREE.Math.degToRad(remoteInput.mag[2]),
+                  value: THREE.MathUtils.degToRad(remoteInput.mag[2]),
                   onSetValue: () => {
                     let payload = [...remoteInput.mag]
-                    payload[2] = THREE.Math.radToDeg(parseFloat(event.target.value))
+                    payload[2] = THREE.MathUtils.radToDeg(parseFloat(event.target.value))
                     setInputMag(payload)
                   },
                   min: -Math.PI / 2,
                   max: Math.PI / 2,
-                  formatter: value => Math.round(value * THREE.Math.RAD2DEG).toString() + '°'
+                  formatter: value => Math.round(value * THREE.MathUtils.RAD2DEG).toString() + '°'
                 }],
                 ['div', { style: { display: 'flex', flexDirection: 'row' } }, [
                   ['div', { style: { width: 50 } }, 'mag'],
@@ -210,7 +210,7 @@ const createControls = ({ store }) => {
       ])
     })
 
-  ReactDOM.render(
+  ReactRoot.render(
     h([
       Provider, { store }, [
         Controls
@@ -223,8 +223,8 @@ const createControls = ({ store }) => {
 const createSuzanne = () => {
   var loader = new THREE.ObjectLoader()
   let { geometry } = loader.parse(Suzanne)
-  // geometry.applyMatrix( new THREE.Matrix4().makeRotationX(Math.PI / 2) )
-  // geometry.applyMatrix( new THREE.Matrix4().makeScale(0.5, 0.5, 0.5) )
+  // geometry.applyMatrix4( new THREE.Matrix4().makeRotationX(Math.PI / 2) )
+  // geometry.applyMatrix4( new THREE.Matrix4().makeScale(0.5, 0.5, 0.5) )
   material = new THREE.MeshNormalMaterial()
   let mesh = new THREE.Mesh( geometry, material )
   return mesh
@@ -314,7 +314,7 @@ createScene({
 
     let animate = () => {
       let remoteInput = store.getState().input
-      let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.Math.degToRad)
+      let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.MathUtils.degToRad)
 
       let q = new THREE.Quaternion()
         .setFromEuler(
@@ -379,7 +379,7 @@ createScene({
 
       magValues[0] = magValues[0] + offset
 
-      let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.Math.degToRad)
+      let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.MathUtils.degToRad)
 
       let q = new THREE.Quaternion()
         .setFromEuler(
@@ -406,9 +406,9 @@ createScene({
       helper.quaternion.copy(q)
 
       // if (input.down) {
-      //   group.rotation.z = THREE.Math.degToRad(input.mag[0])
-      //   group.rotation.y = THREE.Math.degToRad(input.mag[1])
-      //   group.rotation.x = THREE.Math.degToRad(input.mag[2])
+      //   group.rotation.z = THREE.MathUtils.degToRad(input.mag[0])
+      //   group.rotation.y = THREE.MathUtils.degToRad(input.mag[1])
+      //   group.rotation.x = THREE.MathUtils.degToRad(input.mag[2])
       // }
 
       renderer.render( scene, camera )
@@ -455,12 +455,12 @@ createScene({
         offset = 0-magValues[0]
         down = true
 
-        let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.Math.degToRad)
+        let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.MathUtils.degToRad)
         let deviceQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(beta, alpha + (offset*(Math.PI/180)),-gamma, 'YXZ')).multiply(new THREE.Quaternion().setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI / 2 ))
         startingDeviceOffset =  new THREE.Quaternion().clone().inverse().multiply(deviceQuaternion).normalize().inverse()
       }
 
-      let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.Math.degToRad)
+      let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.MathUtils.degToRad)
       let deviceQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(beta, alpha + (offset*(Math.PI/180)),-gamma, 'YXZ')).multiply(new THREE.Quaternion().setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI / 2 ))
 
       let deviceDifference = startingDeviceQuaternion.clone().inverse().multiply(deviceQuaternion).multiply(startingDeviceOffset)
@@ -594,7 +594,7 @@ createScene({
         let animate = () => {
           let remoteInput = store.getState().input
           let magValues = remoteInput.mag
-          let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.Math.degToRad)
+          let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.MathUtils.degToRad)
 
           if (!remoteInput.down) {
             down = false
@@ -607,7 +607,7 @@ createScene({
             offset = 0-magValues[0]
             down = true
 
-            let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.Math.degToRad)
+            let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.MathUtils.degToRad)
             let deviceQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(beta, alpha + (offset*(Math.PI/180)),-gamma, 'YXZ')).multiply(new THREE.Quaternion().setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI / 2 ))
             startingDeviceOffset =  new THREE.Quaternion().clone().inverse().multiply(deviceQuaternion).normalize().inverse()
 
@@ -678,7 +678,7 @@ createScene({
         let animate = () => {
           let remoteInput = store.getState().input
           let magValues = remoteInput.mag
-          let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.Math.degToRad)
+          let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.MathUtils.degToRad)
 
           if (!remoteInput.down) {
             down = false
@@ -691,7 +691,7 @@ createScene({
             offset = 0-magValues[0]
             down = true
 
-            let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.Math.degToRad)
+            let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.MathUtils.degToRad)
             let deviceQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(beta, alpha + (offset*(Math.PI/180)),-gamma, 'YXZ')).multiply(new THREE.Quaternion().setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI / 2 ))
             startingDeviceOffset =  new THREE.Quaternion().clone().inverse().multiply(deviceQuaternion).normalize().inverse()
 
@@ -764,7 +764,7 @@ createScene({
         let animate = () => {
           let remoteInput = store.getState().input
           let magValues = remoteInput.mag
-          let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.Math.degToRad)
+          let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.MathUtils.degToRad)
 
           if (!remoteInput.down) {
             down = false
@@ -780,7 +780,7 @@ createScene({
             offset = 0-magValues[0]
             down = true
 
-            let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.Math.degToRad)
+            let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.MathUtils.degToRad)
             let deviceQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(beta, alpha + (offset*(Math.PI/180)),-gamma, 'YXZ')).multiply(new THREE.Quaternion().setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI / 2 ))
             startingDeviceOffset =  new THREE.Quaternion().clone().inverse().multiply(deviceQuaternion).normalize().inverse()
 
@@ -853,7 +853,7 @@ createScene({
         let animate = () => {
           let remoteInput = store.getState().input
           let magValues = remoteInput.mag
-          let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.Math.degToRad)
+          let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.MathUtils.degToRad)
 
           if (!remoteInput.down) {
             down = false
@@ -869,7 +869,7 @@ createScene({
             offset = 0-magValues[0]
             down = true
 
-            let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.Math.degToRad)
+            let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.MathUtils.degToRad)
             let deviceQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(beta, alpha + (offset*(Math.PI/180)),-gamma, 'YXZ')).multiply(new THREE.Quaternion().setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI / 2 ))
             startingDeviceOffset =  new THREE.Quaternion().clone().inverse().multiply(deviceQuaternion).normalize().inverse()
 
@@ -947,7 +947,7 @@ createScene({
         let animate = () => {
           let remoteInput = store.getState().input
           let magValues = remoteInput.mag
-          let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.Math.degToRad)
+          let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.MathUtils.degToRad)
 
           if (!remoteInput.down) {
             down = false
@@ -963,7 +963,7 @@ createScene({
             offset = 0-magValues[0]
             down = true
 
-            let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.Math.degToRad)
+            let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.MathUtils.degToRad)
             let deviceQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(beta, alpha + (offset*(Math.PI/180)),-gamma, 'YXZ')).multiply(new THREE.Quaternion().setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI / 2 ))
             startingDeviceOffset =  new THREE.Quaternion().clone().inverse().multiply(deviceQuaternion).normalize().inverse()
 
@@ -1043,7 +1043,7 @@ createScene({
         let animate = () => {
           let remoteInput = store.getState().input
           let magValues = remoteInput.mag
-          let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.Math.degToRad)
+          let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.MathUtils.degToRad)
 
 
 
@@ -1063,7 +1063,7 @@ createScene({
 
             targetobject = snake.children[0].children[2].skeleton.bones[2]
 
-            let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.Math.degToRad)
+            let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.MathUtils.degToRad)
             let deviceQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(beta, alpha + (offset*(Math.PI/180)),-gamma, 'YXZ')).multiply(new THREE.Quaternion().setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI / 2 ))
             startingDeviceOffset =  new THREE.Quaternion().clone().inverse().multiply(deviceQuaternion).normalize().inverse()
 
@@ -1148,7 +1148,7 @@ createScene({
         let animate = () => {
           let remoteInput = store.getState().input
           let magValues = remoteInput.mag
-          let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.Math.degToRad)
+          let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.MathUtils.degToRad)
 
 
 
@@ -1168,7 +1168,7 @@ createScene({
 
             targetobject = snake.children[0].children[2].skeleton.bones[2]
 
-            let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.Math.degToRad)
+            let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.MathUtils.degToRad)
             let deviceQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(beta, alpha + (offset*(Math.PI/180)),-gamma, 'YXZ')).multiply(new THREE.Quaternion().setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI / 2 ))
             startingDeviceOffset =  new THREE.Quaternion().clone().inverse().multiply(deviceQuaternion).normalize().inverse()
 
@@ -1258,7 +1258,7 @@ createScene({
         let animate = () => {
           let remoteInput = store.getState().input
           let magValues = remoteInput.mag
-          let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.Math.degToRad)
+          let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.MathUtils.degToRad)
 
 
 
@@ -1278,7 +1278,7 @@ createScene({
 
             targetobject = snake.children[0].children[2].skeleton.bones[9]
 
-            let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.Math.degToRad)
+            let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.MathUtils.degToRad)
             let deviceQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(beta, alpha + (offset*(Math.PI/180)),-gamma, 'YXZ')).multiply(new THREE.Quaternion().setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI / 2 ))
             startingDeviceOffset =  new THREE.Quaternion().clone().inverse().multiply(deviceQuaternion).normalize().inverse()
 
@@ -1365,7 +1365,7 @@ createScene({
         let animate = () => {
           let remoteInput = store.getState().input
           let magValues = remoteInput.mag
-          let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.Math.degToRad)
+          let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.MathUtils.degToRad)
 
           if (!remoteInput.down) {
             down = false
@@ -1378,7 +1378,7 @@ createScene({
 
             targetobject = snake.children[0].children[2].skeleton.bones[targetBoneNum]
 
-            let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.Math.degToRad)
+            let [ alpha, beta, gamma ] = remoteInput.mag.map(THREE.MathUtils.degToRad)
             let deviceQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(beta, alpha + (offset*(Math.PI/180)),-gamma, 'YXZ')).multiply(new THREE.Quaternion().setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), -Math.PI / 2 ))
             startingDeviceOffset =  new THREE.Quaternion().clone().inverse().multiply(deviceQuaternion).normalize().inverse()
 

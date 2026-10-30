@@ -10,6 +10,7 @@ module.exports = {
   },
   module: {
     rules: [
+      { test: /\.mjs$/, type: 'javascript/auto' },
       {
         test: /\.(js|jsx)$/,
         exclude: /(node_modules|bower_components)/,

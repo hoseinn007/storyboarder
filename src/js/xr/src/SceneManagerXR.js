@@ -1,3 +1,4 @@
+const getSceneInteractions = require('../../utils/scene-interactions')
 const SHOW_STATS = false
 const SHOW_LOG = false
 
@@ -6,7 +7,8 @@ window.THREE = window.THREE || THREE
 require('./three/GPUPickers/utils/Object3dExtension')
 
 const { useMemo, useRef, useState, useEffect, useCallback, Suspense } = React = require('react')
-const { Canvas, useThree, useUpdate, useFrame } = require('react-three-fiber')
+const { Canvas, useThree, useFrame } = require('@react-three/fiber')
+const useUpdate = require('../../hooks/use-three-update')
 const { connect, Provider, useSelector } = require('react-redux')
 const useReduxStore = require('react-redux').useStore
 const { createSelector } = require('reselect')
@@ -736,7 +738,7 @@ const SceneContent = connect(
               let sceneObject = sceneObjects[id]
               let characterModel = getAsset(getFilepathForModelByType(sceneObjects[sceneObject.attachToId]))
               let gltf = getAsset(getFilepathForModelByType(sceneObjects[id]))
-              let character = scene.__interaction.filter(o => o.userData.id === sceneObject.attachToId)[0]
+              let character = getSceneInteractions(scene).filter(o => o.userData.id === sceneObject.attachToId)[0]
               return <SimpleErrorBoundary key={id}>
                   <Attachable
                     key={id}
@@ -1054,14 +1056,13 @@ const SceneManagerXR = ({SGConnection}) => {
       {
         !ready && <ProgressIntro value={progress} msg={currentMsg} />
       }
-      <Canvas
+      <Canvas linear flat dpr={1}
         // initialize camera for browser view at a standing height off the floor
         // (this will change once the HMD initializes)
         camera={{
           'position-y': 1.6, 'position-z': 0
         }}
         // enable VR
-        vr
       >
         <Provider store={store}>
           <Suspense fallback="loading">

@@ -127,7 +127,7 @@ React.memo(({
 
   const onCreateHandPosePreset = event => {
     event.preventDefault()
-    newGeneratedId.current = "Pose "+shortId(THREE.Math.generateUUID())
+    newGeneratedId.current = "Pose "+shortId(THREE.MathUtils.generateUUID())
     newPresetName.current = newGeneratedId.current
     showModal(true)
   }
@@ -153,7 +153,7 @@ React.memo(({
       }
       // create a preset out of it
       let newPreset = {
-          id: THREE.Math.generateUUID(),
+          id: THREE.MathUtils.generateUUID(),
           name,
           keywords: name, // TODO keyword editing
           state: {

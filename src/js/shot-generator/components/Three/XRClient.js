@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import React, { useMemo, useEffect, useRef } from 'react'
-import { useUpdate } from 'react-three-fiber'
+import useUpdate from '../../../hooks/use-three-update'
 
 import { useAsset } from "../../hooks/use-assets-manager"
 

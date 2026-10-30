@@ -42,7 +42,8 @@ var
 ;
 
 //main class
-THREE.CustomInstancedMesh = function ( 
+THREE.CustomInstancedMesh = class extends THREE.Mesh {
+constructor (
 	bufferGeometry, 
 	material, 
 	numInstances, 
@@ -51,7 +52,7 @@ THREE.CustomInstancedMesh = function (
 	uniformScale 
 ) {
 
-	THREE.Mesh.call( this , (new THREE.InstancedBufferGeometry()).copy( bufferGeometry ) ); //hacky for now
+	super((new THREE.InstancedBufferGeometry()).copy(bufferGeometry)); //hacky for now
 
 	this._dynamic = !!dynamic; //TODO: set a bit mask for different attributes?
 
@@ -79,7 +80,7 @@ THREE.CustomInstancedMesh = function (
 
 }
 
-THREE.CustomInstancedMesh.prototype = Object.create( THREE.Mesh.prototype );
+}
 
 THREE.CustomInstancedMesh.constructor = THREE.CustomInstancedMesh;
 

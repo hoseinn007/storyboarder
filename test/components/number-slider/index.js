@@ -1,7 +1,7 @@
 // ELECTRON_DISABLE_SECURITY_WARNINGS=true npx floss -d -p index.js
 
 const { useState } = React = require('react')
-const ReactDOM = require('react-dom')
+const ReactRoot = require('../../../src/js/utils/react-root')
 console.clear()
 
 const NumberSlider = require('../../../src/js/shot-generator/NumberSlider')
@@ -33,7 +33,7 @@ const formatters = {
   degrees: value => value.toFixed(0) + '°',
   // formatter: value => feetAndInchesAsString(...metersAsFeetAndInches(sceneObject.height))
   percent: value => Math.round(value * 100).toString() + '%'
-  // radToDeg: value => Math.round(value * THREE.Math.RAD2DEG).toString() + '°'
+  // radToDeg: value => Math.round(value * THREE.MathUtils.RAD2DEG).toString() + '°'
 }
 
 const NumberSliderTest = () => {
@@ -90,7 +90,7 @@ const NumberSliderTest = () => {
   ])
 }
 
-ReactDOM.render(
+ReactRoot.render(
   React.createElement('div', { style: { margin: 10 } }, [
     React.createElement(NumberSliderTest, { key: 'number-slider-test'} )
   ]),

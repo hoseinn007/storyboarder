@@ -51,8 +51,8 @@ const generateRule = (focusedCenter, character, shot, camera, skinnedMesh) => {
     if(i < 70) {
         let headQuaternion = headBone.worldQuaternion()
         let rotation = new THREE.Euler().setFromQuaternion(headQuaternion)
-        let characterRotation = rotation.y * THREE.Math.RAD2DEG
-        let cameraRotation = shot.cameraRotation ? shot.cameraRotation * THREE.Math.RAD2DEG : 0
+        let characterRotation = rotation.y * THREE.MathUtils.RAD2DEG
+        let cameraRotation = shot.cameraRotation ? shot.cameraRotation * THREE.MathUtils.RAD2DEG : 0
         let characterFacingRotation = cameraRotation - (characterRotation)
         characterFacingRotation = clamRotationTo(characterFacingRotation)
         results.push(new VerticalOneThirdRule(focusedCenter, camera, headCenter, characterFacingRotation < 0 ? "left" : "right"));

@@ -200,8 +200,8 @@ function convertGeometryToIndexedBuffer( geometry ) {
 	uvArray.trim_size();
 
 	BGeom.setIndex( new THREE.BufferAttribute( indexArray.buffer, 3 ) );
-	BGeom.addAttribute( 'position', new THREE.BufferAttribute( vertArray.buffer, 3 ) );
-	BGeom.addAttribute( 'uv', new THREE.BufferAttribute( uvArray.buffer, 2 ) );
+	BGeom.setAttribute( 'position', new THREE.BufferAttribute( vertArray.buffer, 3 ) );
+	BGeom.setAttribute( 'uv', new THREE.BufferAttribute( uvArray.buffer, 2 ) );
 
 	return BGeom;
 
@@ -290,7 +290,7 @@ function compute_vertex_normals( geometry ) {
 	}
 
 	newNormals.trim_size();
-	geometry.addAttribute( 'normal', new THREE.BufferAttribute( newNormals.buffer, 3 ) );
+	geometry.setAttribute( 'normal', new THREE.BufferAttribute( newNormals.buffer, 3 ) );
 
 }
 
@@ -357,12 +357,12 @@ function unIndexIndexedGeometry( geometry ) {
 
 	geometry.index = null;
 
-	geometry.addAttribute( 'position', new THREE.BufferAttribute( newVertices.buffer, 3 ) );
-	geometry.addAttribute( 'normal', new THREE.BufferAttribute( newNormals.buffer, 3 ) );
+	geometry.setAttribute( 'position', new THREE.BufferAttribute( newVertices.buffer, 3 ) );
+	geometry.setAttribute( 'normal', new THREE.BufferAttribute( newNormals.buffer, 3 ) );
 
 	if ( newUvs.length !== 0 ) {
 
-		geometry.addAttribute( 'uv', new THREE.BufferAttribute( newUvs.buffer, 2 ) );
+		geometry.setAttribute( 'uv', new THREE.BufferAttribute( newUvs.buffer, 2 ) );
 
 	}
 
@@ -785,8 +785,8 @@ var edge_type = function ( a, b ) {
 		newUVs.trim_size();
 
 		geometry.setIndex( new THREE.BufferAttribute( newFaces.buffer ,3 ) );
-		geometry.addAttribute( 'position', new THREE.BufferAttribute( newVertices.buffer, 3 ) );
-		geometry.addAttribute( 'uv', new THREE.BufferAttribute( newUVs.buffer, 2 ) );
+		geometry.setAttribute( 'position', new THREE.BufferAttribute( newVertices.buffer, 3 ) );
+		geometry.setAttribute( 'uv', new THREE.BufferAttribute( newUVs.buffer, 2 ) );
 
 	};
 

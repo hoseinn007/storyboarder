@@ -1,6 +1,8 @@
 import * as THREE from 'three'
+import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils'
 import React, { useMemo, useEffect, useRef } from 'react'
-import { useUpdate, extend } from 'react-three-fiber'
+import { extend } from '@react-three/fiber'
+import useUpdate from '../../../hooks/use-three-update'
 
 import traverseMeshMaterials from '../../helpers/traverse-mesh-materials'
 import { useAsset } from "../../hooks/use-assets-manager"
@@ -28,7 +30,7 @@ const materialFactory = () => patchMaterial(new THREE.MeshToonMaterial({
 })
 
 const meshFactory = (source, isIcon) => {
-  let mesh = source.isSkinnedMesh ? THREE.SkeletonUtils.clone(source) : source.clone()
+  let mesh = source.isSkinnedMesh ? cloneSkeleton(source) : source.clone()
 
   let material = materialFactory(isIcon)
 

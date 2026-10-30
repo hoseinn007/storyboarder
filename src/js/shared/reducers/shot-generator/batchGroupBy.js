@@ -5,7 +5,7 @@ const { groupByActionTypes } = require('redux-undo')
 
 module.exports = {
   _group: null,
-  start (group = THREE.Math.generateUUID()) {
+  start (group = THREE.MathUtils.generateUUID()) {
     this._group = group
   },
   end () {

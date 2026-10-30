@@ -1,8 +1,9 @@
+const getSceneInteractions = require('../../../utils/scene-interactions')
 import * as THREE from 'three'
 
 import React, { useRef, useEffect, useMemo } from 'react'
 import { batch } from 'react-redux'
-import { useThree } from 'react-three-fiber'
+import { useThree } from '@react-three/fiber'
 import { axis } from "../../../shared/IK/utils/TransformControls"
 
 const Group = React.memo(({ id, type, ...props }) => {
@@ -10,7 +11,7 @@ const Group = React.memo(({ id, type, ...props }) => {
   const { scene } = useThree()
 
   const children = useMemo(() => {
-    return scene.__interaction.filter((object) => props.children.includes(object.userData.id))
+    return getSceneInteractions(scene).filter((object) => props.children.includes(object.userData.id))
   }, [props.children])
 
   const addArrayToObject = (object, array) => {
@@ -54,7 +55,7 @@ const Group = React.memo(({ id, type, ...props }) => {
           dispatch(props.updateObject(child.userData.id, state))
 
           if(child.userData.type === "character") {
-            let attachables = scene.__interaction.filter(object => object.userData.bindedId === child.userData.id)
+            let attachables = getSceneInteractions(scene).filter(object => object.userData.bindedId === child.userData.id)
             for(let i = 0; i < attachables.length; i ++) {
                 let attachable = attachables[i]
                 attachable.parent.updateWorldMatrix(true, true)

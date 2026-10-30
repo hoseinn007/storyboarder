@@ -9,9 +9,9 @@ const CameraInspector = React.memo(({updateObject, sceneObject}) => {
   const setY = useCallback((y) => updateObject(id, {y}), [])
   const setZ = useCallback((z) => updateObject(id, {z}), [])
 
-  const setRotation = useCallback((value) => updateObject(id, {rotation: THREE.Math.degToRad(value)}), [])
-  const setRoll = useCallback((value) => updateObject(id, {roll: THREE.Math.degToRad(value)}), [])
-  const setTilt = useCallback((value) => updateObject(id, {tilt: THREE.Math.degToRad(value)}), [])
+  const setRotation = useCallback((value) => updateObject(id, {rotation: THREE.MathUtils.degToRad(value)}), [])
+  const setRoll = useCallback((value) => updateObject(id, {roll: THREE.MathUtils.degToRad(value)}), [])
+  const setTilt = useCallback((value) => updateObject(id, {tilt: THREE.MathUtils.degToRad(value)}), [])
   
   const setFOV = useCallback((fov) => updateObject(id, {fov}), [])
   

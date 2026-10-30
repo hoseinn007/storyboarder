@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react'
-import { useUpdate } from 'react-three-fiber'
+import useUpdate from '../../../hooks/use-three-update'
 import IconsSprites from './IconSprites'
 import { SHOT_LAYERS } from '../../utils/ShotLayers'
 const IconsComponent = React.memo(({type, text, auxiliaryText = null, sceneObject, fontMesh, ...props}) => {

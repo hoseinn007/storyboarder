@@ -1,3 +1,4 @@
+const getSceneInteractions = require('../utils/scene-interactions')
 import { connect } from 'react-redux'
 import ModelObject from './components/Three/ModelObject'
 import Environment from './components/Three/Environment'
@@ -26,7 +27,7 @@ import {
 
 import systemEmotionPresets from '../shared/reducers/shot-generator-presets/emotions.json'
 
-import { useThree, useFrame } from 'react-three-fiber'
+import { useThree, useFrame } from '@react-three/fiber'
 
 import ModelLoader from '../services/model-loader'
 import Character from './components/Three/Character'
@@ -245,7 +246,7 @@ const SceneManagerR3fLarge = connect(
         for(let i = 0; i < keys.length; i++ ) {
           let key = keys[i]
           if(cameraShots[key].character) {
-            selected = scene.__interaction.filter((object) => object.userData.id === cameraShots[key].character)[0]
+            selected = getSceneInteractions(scene).filter((object) => object.userData.id === cameraShots[key].character)[0]
           }
           if((!cameraShots[key].size && !cameraShots[key].angle) || camera.userData.id !== cameraShots[key].cameraId ) continue
           setShot({

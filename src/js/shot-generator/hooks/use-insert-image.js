@@ -12,7 +12,7 @@ const useInsertImage = (initializeImage) => {
     const imageDrop = (e) => {
         for (const f of e.dataTransfer.files) { 
           let { name, ext } = path.parse( f.path)
-          let imageId = THREE.Math.generateUUID()
+          let imageId = THREE.MathUtils.generateUUID()
           let imageProjectPath = path.join('models', 'images', name + ext)
           let imagePath = getAssetPath('image', imageProjectPath)
           fs.ensureDirSync(path.dirname(imagePath))
@@ -35,7 +35,7 @@ const useInsertImage = (initializeImage) => {
           if(item.type.indexOf("image") == -1) continue
           let blob = item.getAsFile()
   
-          let imageId = THREE.Math.generateUUID()
+          let imageId = THREE.MathUtils.generateUUID()
           let imageProjectPath = path.join('models', 'images', `${imageId}-texture.png`)
           let imagePath = getAssetPath('image', imageProjectPath)
           let reader = new FileReader()

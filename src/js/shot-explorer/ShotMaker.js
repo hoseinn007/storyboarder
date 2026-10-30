@@ -1,3 +1,4 @@
+const getSceneInteractions = require('../utils/scene-interactions')
 import React, { useState, useCallback, useRef, useEffect, useMemo, useLayoutEffect } from 'react'
 import ShotItem from './ShotItem'
 import { ShotSizes, ShotAngles, setShot } from '../shot-generator/utils/cameraUtils'
@@ -28,7 +29,7 @@ const getRandomFov = (aspectRatio) => {
     let filemHeight = 35 / Math.max( aspectRatio, 1 );
     var vExtentSlope = 0.5 * filemHeight / mms[randomMms];
 
-    let fov = THREE.Math.RAD2DEG * 2 * Math.atan( vExtentSlope );
+    let fov = THREE.MathUtils.RAD2DEG * 2 * Math.atan( vExtentSlope );
     return fov
 }
 
@@ -118,7 +119,7 @@ const ShotMaker = React.memo(({
     }, [sceneInfo])
 
     const generateShot = (shotsArray, shotsCount) => {
-        let characters = sceneInfo.scene.__interaction.filter(object => object.userData.type === 'character' && !isUserModel(object.userData.modelName))
+        let characters = getSceneInteractions(sceneInfo.scene).filter(object => object.userData.type === 'character' && !isUserModel(object.userData.modelName))
         if(!characters.length) {
             setNoCharacterWarn(true)
             return;
@@ -205,7 +206,7 @@ const ShotMaker = React.memo(({
 
     const updateCamera = () => {
         withState((dispatch, state) => {
-            let id = THREE.Math.generateUUID()
+            let id = THREE.MathUtils.generateUUID()
             let { x, y, z } = sceneInfo.camera.position
             let rot = new THREE.Euler().setFromQuaternion(sceneInfo.camera.quaternion, "YXZ")
             let rotation = rot.y

@@ -146,7 +146,7 @@ class FaceMesh {
         let target = new THREE.Vector3()
         let ray = new THREE.Ray(interactionPoint, dir)
         let _inverseMatrix = new THREE.Matrix4()
-        _inverseMatrix.getInverse( object.matrixWorld );
+        _inverseMatrix.copy( object.matrixWorld ).invert();
 		ray.applyMatrix4( _inverseMatrix );
         let material = object.material
         let point = new THREE.Vector3()
@@ -202,7 +202,7 @@ class FaceMesh {
     
             }
             intersect.faceIndex = Math.floor( i / 3 ); // triangle number in indexed buffer semantics
-            let face = new THREE.Face3( a, b, c );
+            let face = { a, b, c, normal: new THREE.Vector3(), materialIndex: 0 };
             THREE.Triangle.getNormal( _vA, _vB, _vC, face.normal );
     
             intersect.face = face;

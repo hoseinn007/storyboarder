@@ -1,6 +1,7 @@
 const THREE = require('three')
 const { useMemo, useEffect, useState, useRef } = React = require('react')
-const { useUpdate, useThree } = require('react-three-fiber')
+const { useThree } = require('@react-three/fiber')
+const useUpdate = require('../../../hooks/use-three-update')
 
 const cloneGltf = require('../helpers/clone-gltf')
 const isUserModel = require('../helpers/is-user-model')

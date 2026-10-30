@@ -136,7 +136,7 @@ class XRRagdoll extends XRIKObject
     {
         let hipsTarget = this.hipsControlTarget;
         let armatureInverseMatrixWorld = this.resourceManager.getMatrix4();
-        armatureInverseMatrixWorld.getInverse(this.rigMesh.skeleton.bones[0].parent.matrixWorld);
+        armatureInverseMatrixWorld.copy(this.rigMesh.skeleton.bones[0].parent.matrixWorld).invert();
         
         hipsTarget.applyMatrix4(this.rigMesh.skeleton.bones[0].parent.matrixWorld);
         let hipsWP = this.resourceManager.getVector3().copy(hipsTarget.position);
@@ -353,7 +353,7 @@ class XRRagdoll extends XRIKObject
             if(!chainObjects[i].poleConstraint) continue;
             let poleTarget = chainObjects[i].poleConstraint.poleTarget;
             let characterMatrix = this.originalMesh.matrixWorld;
-            let characterInverseMatrix = new THREE.Matrix4().getInverse(characterMatrix)
+            let characterInverseMatrix = new THREE.Matrix4().copy(characterMatrix).invert()
 
             poleTarget.mesh.applyMatrix4(characterInverseMatrix);
             poleTarget.mesh.updateMatrixWorld(true);
@@ -416,7 +416,7 @@ class XRRagdoll extends XRIKObject
     takeBoneInTheMeshSpace(mesh, bone, boneMatrix)
     {
         let armatureInverseMatrixWorld = this.resourceManager.getMatrix4();
-        armatureInverseMatrixWorld.getInverse(mesh.skeleton.bones[0].parent.matrixWorld);
+        armatureInverseMatrixWorld.copy(mesh.skeleton.bones[0].parent.matrixWorld).invert();
         boneMatrix.multiplyMatrices(armatureInverseMatrixWorld, bone.matrixWorld);
         this.resourceManager.release(armatureInverseMatrixWorld);
     }

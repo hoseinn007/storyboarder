@@ -1,5 +1,5 @@
 const { useMemo, useRef, useCallback } = React = require('react')
-const { useFrame } = require('react-three-fiber')
+const { useFrame } = require('@react-three/fiber')
 
 const SCALE = 0.4
 const POSITION = [0, 0.02 + 0.30, 0.01 - 0.25]
