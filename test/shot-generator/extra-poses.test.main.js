@@ -5,9 +5,9 @@ const original = require('../../src/js/shared/reducers/shot-generator-presets/po
 const extra = require('../../src/js/shared/reducers/shot-generator-presets/quaternius-poses.json')
 const { captureKeyPoint, evaluateDynamicBoard } = require('../../src/js/shared/reducers/shot-generator/dynamic-board')
 describe('Internet pose library', () => {
-  it('adds 77 distinct searchable poses and preserves all original presets', () => {
-    assert.equal(Object.keys(extra).length, 77)
-    assert.equal(Object.keys(poses).length, Object.keys(original).length + 77)
+  it('adds 151 distinct searchable poses and preserves all original presets', () => {
+    assert.equal(Object.keys(extra).length, 151)
+    assert.equal(Object.keys(poses).length, Object.keys(original).length + 151)
     for (const [id, preset] of Object.entries(original)) assert.strictEqual(poses[id], preset)
     for (const [id, preset] of Object.entries(extra)) {
       assert.equal(preset.id, id); assert(preset.keywords.includes('quaternius'))
@@ -19,7 +19,7 @@ describe('Internet pose library', () => {
         assert(Math.abs(q.length() - 1) < 1e-6)
       }
     }
-    assert.equal(new Set(Object.values(extra).map(p => JSON.stringify(p.state.skeleton))).size, 77)
+    assert.equal(new Set(Object.values(extra).map(p => JSON.stringify(p.state.skeleton))).size, 151)
   })
   it('preserves imported poses independently in dynamic-board key points', () => {
     const list = Object.values(extra)

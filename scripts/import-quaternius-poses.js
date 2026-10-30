@@ -60,12 +60,12 @@ const presets = {}
 const seen = new Set()
 const excluded = new Set(['A_TPose', 'Roll_RM', 'Sword_Attack_RM', 'Sitting_Enter', 'Sitting_Exit', 'Death01'])
 for (const clip of source.animations.filter(a => !excluded.has(a.name))) {
-  for (const [label, phase] of [['A', .25], ['B', .65]]) {
+  for (const [label, phase] of [['A', .25], ['B', .65], ['C', .05], ['D', .85]]) {
     sample(clip, phase)
     const skeleton = {}
     for (const { i, target: bone } of pairs) {
-      const desired = worldQ(src.nodes[i]).multiply(sourceRest[i].clone().inverse()).multiply(targetRest[bone.name])
-      bone.quaternion.copy(worldQ(bone.parent).inverse().multiply(desired).normalize())
+      const desired = worldQ(src.nodes[i]).multiply(sourceRest[i].clone().invert()).multiply(targetRest[bone.name])
+      bone.quaternion.copy(worldQ(bone.parent).invert().multiply(desired).normalize())
       bone.updateMatrixWorld(true)
       const e = new THREE.Euler().setFromQuaternion(bone.quaternion, 'XYZ')
       skeleton[bone.name] = { rotation: { x: e.x, y: e.y, z: e.z } }

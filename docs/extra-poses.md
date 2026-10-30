@@ -1,6 +1,8 @@
 # Extra Shot Generator poses
 
-77 additional static pose presets are bundled from Quaternius's Universal Animation Library Standard. Search **quaternius** or **Q -** in the pose picker. 40 animation clips are sampled at 25% (A) and 65% (B), with duplicate poses removed. Examples include driving, talking, crouching, swimming, dancing, pushing, picking up, pistol aiming, and sword actions.
+151 additional static pose presets are bundled from Quaternius's Universal Animation Library Standard. Search **quaternius** or **Q -** in the pose picker. 40 animation clips are sampled at 25% (A), 65% (B), 5% (C), and 85% (D), with duplicate poses removed. Examples include driving, talking, crouching, swimming, dancing, pushing, picking up, pistol aiming, and sword actions.
+
+The C and D samples add 74 poses while preserving all 77 existing A/B presets and their IDs.
 
 These are sampled poses, not imported animation clips. They work with the existing pose picker and dynamic-board pose key points. No dependency upgrades or character model replacements are required. Original built-in poses and user presets are retained.
 

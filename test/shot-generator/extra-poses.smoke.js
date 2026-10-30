@@ -21,10 +21,10 @@ app.whenReady().then(async () => {
     window.__extraActor=actor.id;
     window.$r.store.dispatch({type:'SELECT_OBJECT',payload:actor.id});
     const poses = Object.values(window.$r.store.getState().presets.poses).filter(p=>p.source && p.source.author==='Quaternius');
-    if(poses.length!==77) throw new Error('Missing imported presets: '+poses.length);
+    if(poses.length!==151) throw new Error('Missing imported presets: '+poses.length);
   `)
   await new Promise(resolve => setTimeout(resolve, 5000))
-  for (const term of ['Driving', 'Crouch Idle', 'Idle Talking', 'Pistol Aim Neutral']) {
+  for (const term of ['Driving C', 'Crouch Idle D', 'Idle Talking C', 'Pistol Shoot D']) {
     await win.webContents.executeJavaScript(`(() => {
       const pose=Object.values(window.$r.store.getState().presets.poses).find(p=>p.name.includes(${JSON.stringify(term)}));
       if(!pose) throw new Error('Missing pose');
@@ -34,5 +34,5 @@ app.whenReady().then(async () => {
     const image = await win.webContents.capturePage()
     fs.writeFileSync(path.join(os.tmpdir(), 'storyboarder-extra-' + term.replace(/ /g, '-') + '.png'), image.toPNG())
   }
-  finish(0, 'PASS: 77 imported poses loaded; four representative poses rendered in Shot Generator.')
+  finish(0, 'PASS: 151 imported poses loaded; four representative poses rendered in Shot Generator.')
 }).catch(error => finish(1, error.stack))
