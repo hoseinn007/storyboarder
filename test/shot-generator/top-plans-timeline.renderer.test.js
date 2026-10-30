@@ -14,6 +14,168 @@ describe('Top Plans Timeline view', () => {
     view = new TopPlansTimeline({ getScene: () => scene, getFilename: () => '/tmp/project/scene.storyboarder', changed: () => changed++, edit: () => {} })
   })
   afterEach(() => { view.stop(); root.remove() })
+  it('selects a plan by clicking its card or label and leaves duration editing alone', () => {
+    view.show(true)
+    const card = view.element.querySelector('[data-plan-index="1"]')
+    card.click()
+    assert.equal(view.selected.uid, 'plan2')
+    view.select(0)
+    card.querySelector('span').click()
+    assert.equal(view.selected.uid, 'plan2')
+    assert(view.image.src.includes('plan2'))
+    view.select(0)
+    card.querySelector('input').click()
+    assert.equal(view.selected.uid, 'plan1')
+  })
+  it('plays the selected plan and following plans, then stops at the end', async () => {
+    scene.topPlans = Array.from({ length: 3 }, (_, index) => ({ uid: `plan${index}`, url: `plan${index}.png`, duration: 80 }))
+    view.show(true)
+    view.select(1)
+    const played = []
+    view.player.update = (plan, data, filename, time) => played.push({ uid: plan.uid, time })
+    view.element.querySelector('button').click()
+    assert.equal(played[0].uid, 'plan1')
+    assert(played[0].time < 80)
+    await new Promise(resolve => setTimeout(resolve, 250))
+    assert(!view.playing)
+    assert(played.some(frame => frame.uid === 'plan2'))
+    assert(!played.some(frame => frame.uid === 'plan0'))
+    assert.equal(view.selected.uid, 'plan2')
+  })
+  it('keeps the timeline scrollable inside the main window flex layout', () => {
+    const fs = require('fs')
+    const path = require('path')
+    const css = document.createElement('style')
+    css.textContent = fs.readFileSync(path.join(__dirname, '../../src/css/mainwindow.css'), 'utf8')
+    const shell = document.createElement('div')
+    shell.style.cssText = 'display:flex;width:400px;flex-shrink:0;overflow:hidden'
+    root.id = 'storyboarder-main'
+    root.before(shell)
+    shell.appendChild(root)
+    document.head.appendChild(css)
+    try {
+      scene.topPlans = Array.from({ length: 12 }, (_, index) => ({ uid: `plan${index}`, url: `plan${index}.png` }))
+      view.show(true)
+      assert(root.getBoundingClientRect().width <= 400)
+      assert(view.element.clientWidth <= 400)
+      assert(view.element.scrollWidth > view.element.clientWidth)
+      const actions = view.element.firstElementChild
+      const leftBeforeScroll = actions.getBoundingClientRect().left
+      const wheel = new WheelEvent('wheel', { deltaY: 140, cancelable: true, bubbles: true })
+      view.element.dispatchEvent(wheel)
+      assert(wheel.defaultPrevented)
+      assert(view.element.scrollLeft > 0)
+      assert(Math.abs(actions.getBoundingClientRect().left - leftBeforeScroll) <= 1)
+      view.select(11)
+      assert.equal(view.selected.uid, 'plan11')
+      assert(view.element.querySelector('[data-plan-index="11"]').getBoundingClientRect().right <= view.element.getBoundingClientRect().right)
+      assert(Math.abs(actions.getBoundingClientRect().left - leftBeforeScroll) <= 1)
+      view.select(5)
+      assert(view.element.querySelector('[data-plan-index="5"]').getBoundingClientRect().left >= actions.getBoundingClientRect().right)
+    } finally {
+      css.remove()
+      shell.before(root)
+      shell.remove()
+    }
+  })
+  it('selects with arrow keys, clamps at the ends and leaves input keys alone', () => {
+    view.show(true)
+    const key = (name, target = view.element) => {
+      const event = new KeyboardEvent('keydown', { key: name, cancelable: true, bubbles: true })
+      target.addEventListener('keydown', event => view.handleKeyDown(event), { once: true })
+      target.dispatchEvent(event)
+      return event
+    }
+    assert(key('ArrowRight').defaultPrevented)
+    assert.equal(view.selected.uid, 'plan2')
+    key('ArrowRight')
+    assert.equal(view.selected.uid, 'plan2')
+    assert(!key('ArrowLeft', view.element.querySelector('input')).defaultPrevented)
+    assert.equal(view.selected.uid, 'plan2')
+    key('ArrowLeft'); key('ArrowLeft')
+    assert.equal(view.selected.uid, 'plan1')
+    view.show(false)
+    assert(!key('ArrowRight').defaultPrevented)
+    assert.equal(view.selected.uid, 'plan1')
+  })
+  it('scrolls horizontally with the mouse wheel and reveals keyboard selection', () => {
+    scene.topPlans = Array.from({ length: 12 }, (_, index) => ({ uid: `plan${index}`, url: `plan${index}.png` }))
+    view.element.style.width = '400px'
+    view.show(true)
+    const wheel = new WheelEvent('wheel', { deltaY: 140, cancelable: true, bubbles: true })
+    view.element.dispatchEvent(wheel)
+    assert(wheel.defaultPrevented)
+    assert(view.element.scrollLeft > 0)
+    view.select(11)
+    const card = view.element.querySelector('[data-plan-index="11"]').getBoundingClientRect()
+    const viewport = view.element.getBoundingClientRect()
+    assert(card.left >= viewport.left)
+    assert(card.right <= viewport.right)
+    view.select(0)
+    assert(view.element.querySelector('[data-plan-index="0"]').getBoundingClientRect().left >= viewport.left)
+  })
+  it('opens the clicked plan details on double click and keeps thumbnails mounted between clicks', () => {
+    scene.topPlans[0].topPlanDetails = { sceneNumber: '1', sceneName: 'Kitchen' }
+    scene.topPlans[1].topPlanDetails = { sceneNumber: '2', sceneName: 'Garden' }
+    view.show(true)
+    const thumbnail = view.element.querySelectorAll('img')[1]
+    thumbnail.click()
+    assert(thumbnail.isConnected)
+    thumbnail.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
+    const dialog = document.querySelector('[aria-label="Top plan details"]')
+    assert(dialog)
+    assert.equal(dialog.querySelector('[aria-label="Scene name"]').value, 'Garden')
+    assert.equal(view.selected.uid, 'plan2')
+    dialog.querySelector('[type="button"]').click()
+  })
+  it('edits details, syncs saved Shot Generator data, re-sorts and retains selection', async () => {
+    const details = { sceneNumber: '1', sceneName: 'Kitchen', planNumber: '1', planName: 'Wide', description: 'Opening', characterName: 'Alice', planType: 'static' }
+    const plan = scene.topPlans[0]
+    plan.topPlanDetails = { ...details }
+    plan.sg = { data: { topPlanDetails: { ...details } } }
+    scene.topPlans[1].topPlanDetails = { ...details, sceneNumber: '2' }
+    view.show(true)
+    const result = view.editDetails()
+    const dialog = document.querySelector('[aria-label="Top plan details"]')
+    const input = label => dialog.querySelector(`[aria-label="${label}"]`)
+    assert.equal(input('Scene name').value, 'Kitchen')
+    assert(input('Plan type').disabled)
+    input('Scene number').value = '10'
+    input('Scene name').value = 'Garden'
+    input('Plan number').value = '3'
+    input('Character name').value = 'شیما'
+    dialog.querySelector('[type="submit"]').click()
+    await result
+    assert.equal(changed, 1)
+    assert.deepStrictEqual(scene.topPlans.map(plan => plan.uid), ['plan2', 'plan1'])
+    assert.strictEqual(view.selected, plan)
+    assert.equal(plan.topPlanDetails.sceneName, 'Garden')
+    assert.equal(plan.topPlanDetails.characterName, 'شیما')
+    assert.deepStrictEqual(plan.sg.data.topPlanDetails, plan.topPlanDetails)
+    assert(view.element.textContent.includes('Scene 10: Garden'))
+  })
+  it('cancels editing without changing saved details', async () => {
+    view.show(true)
+    const original = JSON.stringify(scene)
+    const result = view.editDetails()
+    const dialog = document.querySelector('[aria-label="Top plan details"]')
+    dialog.querySelector('input').value = '99'
+    dialog.querySelector('[type="button"]').click()
+    await result
+    assert.equal(JSON.stringify(scene), original)
+    assert.equal(changed, 0)
+  })
+  it('exports Excel through its action and disables export when there are no plans', () => {
+    let exported = 0
+    view.exportExcel = () => exported++
+    view.show(true)
+    const excel = () => Array.from(view.element.querySelectorAll('button')).find(button => button.textContent === 'Export Excel')
+    excel().click()
+    assert.equal(exported, 1)
+    scene.topPlans = []
+    view.render()
+    assert(excel().disabled)
+  })
   it('renders only plans and edits duration without modifying storyboard boards', () => {
     view.show(true)
     assert.equal(view.element.querySelectorAll('input').length, 2)
@@ -45,11 +207,11 @@ describe('Top Plans Timeline view', () => {
     const played = []
     view.player.update = plan => played.push(plan.uid)
     view.play()
-    assert.strictEqual(view.selected.uid, 'plan2')
-    assert.strictEqual(played[0], 'plan2')
+    assert.strictEqual(view.selected.uid, 'plan1')
+    assert.strictEqual(played[0], 'plan1')
     view.stop()
     Array.from(view.element.querySelectorAll('button')).find(button => button.textContent === 'Delete top plan').click()
-    assert.deepStrictEqual(scene.topPlans.map(plan => plan.uid), ['plan1'])
+    assert.deepStrictEqual(scene.topPlans.map(plan => plan.uid), ['plan2'])
   })
   it('shows the scene details on the timeline and playback', () => {
     scene.topPlans[0].topPlanDetails = { sceneNumber: '3', sceneName: 'Kitchen' }

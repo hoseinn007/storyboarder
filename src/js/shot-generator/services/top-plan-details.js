@@ -8,7 +8,7 @@ const fields = [
   ['planType', 'Plan type', 'select']
 ]
 
-const chooseTopPlanDetails = (initial = {}) => new Promise(resolve => {
+const chooseTopPlanDetails = (initial = {}, options = {}) => new Promise(resolve => {
   const previousFocus = document.activeElement
   const overlay = document.createElement('div')
   overlay.setAttribute('role', 'dialog')
@@ -41,6 +41,10 @@ const chooseTopPlanDetails = (initial = {}) => new Promise(resolve => {
     input.style.cssText = 'display:block;width:100%;box-sizing:border-box;margin-top:5px'
     if (type === 'number') { input.min = '1'; input.step = '1' }
     input.value = initial[key] || (key === 'planType' ? 'static' : '')
+    if (key === 'planType' && options.lockPlanType) {
+      input.disabled = true
+      input.title = 'Change the plan type in Shot Generator to regenerate its saved media.'
+    }
     input.oninput = () => input.setCustomValidity('')
     inputs[key] = input
     label.appendChild(input)
@@ -55,7 +59,7 @@ const chooseTopPlanDetails = (initial = {}) => new Promise(resolve => {
   cancel.type = 'button'; cancel.textContent = 'Cancel'
   cancel.onclick = () => finish(null)
   const submit = document.createElement('button')
-  submit.type = 'submit'; submit.textContent = 'Continue to crop'
+  submit.type = 'submit'; submit.textContent = options.submitLabel || 'Continue to crop'
   form.appendChild(cancel); form.appendChild(submit)
   form.onsubmit = event => {
     event.preventDefault()

@@ -365,6 +365,23 @@ const getTopPlansTimeline = () => topPlansTimeline || (topPlansTimeline = new (r
   getFilename: () => boardFilename,
   changed: () => markBoardFileDirty(),
   edit: () => ipcRenderer.send('shot-generator:open'),
+  exportExcel: async () => {
+    try {
+      const { canceled, filePath } = await remote.dialog.showSaveDialog(remote.getCurrentWindow(), {
+        title: 'Export Top Plans Shot List as Excel',
+        defaultPath: path.join(path.dirname(boardFilename), path.basename(boardFilename, '.storyboarder') + '-shot-list.xlsx'),
+        filters: [{ name: 'Excel workbook', extensions: ['xlsx'] }]
+      })
+      if (canceled || !filePath) return
+      const filename = /\.xlsx$/i.test(filePath) ? filePath : filePath + '.xlsx'
+      await require('../exporters/top-plans-excel').exportTopPlansExcel(boardData, filename)
+      shell.showItemInFolder(filename)
+      notifications.notify({ message: 'Top Plans shot list exported as Excel.' })
+    } catch (error) {
+      log.error(error)
+      notifications.notify({ message: 'Could not export top plans: ' + error.message })
+    }
+  },
   exportPdf: async () => {
     try {
       const { canceled, filePath } = await remote.dialog.showSaveDialog(remote.getCurrentWindow(), {
@@ -3495,6 +3512,12 @@ const clearLayers = shouldEraseCurrentLayer => {
 // TODO handle selections / shouldPreserveSelections ?
 // TODO handle re-ordering?
 let goNextBoard = async (direction, shouldPreserveSelections = false) => {
+  // Electron menu accelerators can consume arrows before DOM keydown fires.
+  if (topPlansMode) {
+    const timeline = getTopPlansTimeline()
+    if (!timeline.editingDetails) timeline.select(timeline.index + (direction || 1))
+    return
+  }
   let index
 
   index = direction
@@ -4853,6 +4876,7 @@ const resize = () => {
 }
 
 window.onkeydown = (e) => {
+  if (topPlansMode && getTopPlansTimeline().handleKeyDown(e)) return
   // if a key is pressed which is NOT the play key ...
   if (!isCommandPressed('menu:navigation:play')) {
     // ... halt playback

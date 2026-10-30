@@ -10,16 +10,19 @@ const migrate = scene => {
   scene.boards = scene.boards.filter(board => !isTopPlanBoard(board))
   return true
 }
-// Keep equal scene numbers in insertion order; older unnumbered plans go last.
+// Sort numerically by scene, then plan; missing numbers go last and ties stay stable.
 const sortBySceneNumber = plans => {
-  const number = plan => {
+  const number = (plan, key) => {
     const details = plan.topPlanDetails || (plan.sg && plan.sg.data && plan.sg.data.topPlanDetails)
-    const value = details && Number(details.sceneNumber)
+    const value = details && Number(details[key])
     return Number.isFinite(value) && value > 0 ? value : Infinity
   }
   return plans.sort((a, b) => {
-    const left = number(a), right = number(b)
-    return left === right ? 0 : left < right ? -1 : 1
+    for (const key of ['sceneNumber', 'planNumber']) {
+      const left = number(a, key), right = number(b, key)
+      if (left !== right) return left < right ? -1 : 1
+    }
+    return 0
   })
 }
 module.exports = { migrate, sortBySceneNumber }

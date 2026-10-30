@@ -1,6 +1,12 @@
 const assert = require('assert')
 const { migrate, sortBySceneNumber } = require('../../src/js/models/top-plans')
 describe('Separate top plans collection', () => {
+  it('sorts plan numbers numerically within each scene and puts missing plan numbers last', () => {
+    const plan = (uid, sceneNumber, planNumber) => ({ uid, topPlanDetails: { sceneNumber, planNumber } })
+    const plans = [plan('ten', '2', '10'), plan('missing', '2'), plan('two', '2', '2'), plan('first', '1', '20')]
+    sortBySceneNumber(plans)
+    assert.deepStrictEqual(plans.map(plan => plan.uid), ['first', 'two', 'ten', 'missing'])
+  })
   it('sorts scene numbers numerically, preserves ties and places unnumbered plans last', () => {
     const numbered = (uid, sceneNumber) => ({ uid, topPlanDetails: { sceneNumber } })
     const plans = [{ uid: 'legacy' }, numbered('ten', '10'), numbered('two', '2'),
