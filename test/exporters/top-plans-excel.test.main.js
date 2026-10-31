@@ -15,7 +15,8 @@ describe('Top plans Excel shot list', () => {
   afterEach(() => fs.removeSync(folder))
   it('exports sorted top plans, Unicode characters, numeric durations, and literal text without changing the scene', async () => {
     const plan = (sceneNumber, planNumber, description) => ({ topPlanDetails: {
-      sceneNumber, planNumber, description, characterName: 'شیما & صدرا', sceneName: 'Kitchen', planName: 'Entrance', planType: 'dynamic'
+      sceneNumber, planNumber, description, characterName: 'شیما & صدرا', sceneName: 'Kitchen', planName: 'Entrance', planType: 'dynamic',
+      cameraHeight: '0', lens: '35.25'
     }, duration: 1250 })
     const scene = { boards: [plan('1', '1', 'camera-only')], topPlans: [
       plan('10', '1', 'later'), plan('2', '10', 'ten'), plan('2', '2', '=SUM(A1:A2) <test>')
@@ -40,6 +41,12 @@ describe('Top plans Excel shot list', () => {
     assert.equal(value(rows[1].c[4]), '=SUM(A1:A2) <test>')
     assert.equal(rows[1].c[4].f, undefined)
     assert.equal(value(rows[1].c[7]), 1.25)
+    assert.equal(value(rows[1].c[12]), 0)
+    assert.equal(value(rows[1].c[13]), 35.25)
+    assert.equal(rows[1].c[12].$.t, undefined)
+    assert.equal(rows[1].c[13].$.t, undefined)
+    assert.equal(rows[3].c[12].is[0].t[0]._, undefined)
+    assert.equal(rows[3].c[13].is[0].t[0]._, undefined)
     assert.equal(value(rows[3].c[5]), 'Father')
     assert.equal(sheet.autoFilter[0].$.ref, 'A1:Q5')
     assert.equal(sheet.sheetViews[0].sheetView[0].pane[0].$.state, 'frozen')

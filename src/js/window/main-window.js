@@ -489,6 +489,10 @@ const load = async (event, args) => {
 
     let win = remote.getCurrentWindow()
     win.webContents.addListener('before-input-event', (event, input) => {
+      // Top plans own their keyboard controls. Do not run storyboard menu
+      // accelerators or tool shortcuts in this view, including its dialogs.
+      win.webContents.setIgnoreMenuShortcuts(topPlansMode)
+      if (topPlansMode) return
       // TODO need a different fix for dev tools, which doesn't have before-input-event
       // see: https://github.com/wonderunit/storyboarder/issues/1202
 
@@ -3608,6 +3612,8 @@ let gotoBoard = (boardNumber, shouldPreserveSelections = false) => {
         setTimeout(
           n => {
             let newThumb = document.querySelector(`[data-thumbnail='${n}']`)
+            // The drawer may have switched to top plans before this timer runs.
+            if (!newThumb || n !== currentBoard || topPlansMode) return
             newThumb.classList.add('active')
             newThumb.scrollIntoView()
           },
@@ -4876,7 +4882,10 @@ const resize = () => {
 }
 
 window.onkeydown = (e) => {
-  if (topPlansMode && getTopPlansTimeline().handleKeyDown(e)) return
+  if (topPlansMode) {
+    getTopPlansTimeline().handleKeyDown(e)
+    return
+  }
   // if a key is pressed which is NOT the play key ...
   if (!isCommandPressed('menu:navigation:play')) {
     // ... halt playback

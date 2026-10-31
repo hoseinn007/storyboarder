@@ -12,9 +12,11 @@ const xml = value => String(value == null ? '' : value)
 const ns = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
 const headers = ['شماره صحنه', 'نام صحنه', 'شماره پلان', 'نام پلان', 'توضیحات',
   'شخصیت', 'نوع پلان', 'زمان نما (ثانیه)', 'ترتیب برداشت', 'محل فیلم‌برداری',
-  'زمان فیلم‌برداری', 'سختی برداشت', 'ارتفاع دوربین', 'لنز', 'نکات', 'ملاحظات', 'برداشت شد؟']
+  'زمان فیلم‌برداری', 'سختی برداشت', 'ارتفاع دوربین (متر)', 'لنز (میلی‌متر)', 'نکات', 'ملاحظات', 'برداشت شد؟']
 const widths = [15, 24, 15, 24, 55, 28, 15, 20, 18, 24, 18, 22, 18, 15, 30, 30, 20]
 const positiveNumber = value => Number.isFinite(Number(value)) && Number(value) > 0 ? Number(value) : value || ''
+const measurement = value => value == null || String(value).trim() === '' ? '' :
+  Number.isFinite(Number(value)) ? Number(value) : value
 
 const exportTopPlansExcel = async (scene, filename) => {
   const plans = sortBySceneNumber([...(scene.topPlans || [])])
@@ -25,7 +27,7 @@ const exportTopPlansExcel = async (scene, filename) => {
     return [positiveNumber(details.sceneNumber), details.sceneName, positiveNumber(details.planNumber),
       details.planName, details.description, details.characterName,
       type === 'dynamic' ? 'متحرک' : 'ثابت', boardModel.boardDuration(scene, plan) / 1000,
-      '', '', '', '', '', '', '', '', '']
+      '', '', '', '', measurement(details.cameraHeight), measurement(details.lens), '', '', '']
   })]
   const data = rows.map((row, index) => `<row r="${index + 1}" ht="${index ? 48 : 32}" customHeight="1">${row.map((value, column) => {
     const ref = String.fromCharCode(65 + column) + (index + 1)

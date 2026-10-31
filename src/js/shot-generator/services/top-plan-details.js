@@ -5,6 +5,8 @@ const fields = [
   ['planName', 'Plan name', 'text'],
   ['description', 'Description', 'textarea'],
   ['characterName', 'Character name', 'text'],
+  ['cameraHeight', 'Camera height (m)', 'number'],
+  ['lens', 'Lens (mm)', 'number'],
   ['planType', 'Plan type', 'select']
 ]
 
@@ -36,11 +38,17 @@ const chooseTopPlanDetails = (initial = {}, options = {}) => new Promise(resolve
     } else if (type === 'textarea') {
       input.rows = 3
     } else input.type = type
-    input.required = true
+    const measurement = ['cameraHeight', 'lens'].includes(key)
+    input.required = !measurement
     input.setAttribute('aria-label', title)
     input.style.cssText = 'display:block;width:100%;box-sizing:border-box;margin-top:5px'
     if (type === 'number') { input.min = '1'; input.step = '1' }
-    input.value = initial[key] || (key === 'planType' ? 'static' : '')
+    if (measurement) {
+      input.step = '0.01'
+      if (key === 'cameraHeight') input.removeAttribute('min')
+      else input.min = '0.01'
+    }
+    input.value = initial[key] != null ? initial[key] : (key === 'planType' ? 'static' : '')
     if (key === 'planType' && options.lockPlanType) {
       input.disabled = true
       input.title = 'Change the plan type in Shot Generator to regenerate its saved media.'
@@ -66,7 +74,7 @@ const chooseTopPlanDetails = (initial = {}, options = {}) => new Promise(resolve
     const details = {}
     for (const [key] of fields) {
       details[key] = inputs[key].value.trim()
-      inputs[key].setCustomValidity(details[key] ? '' : 'Please enter a value.')
+      inputs[key].setCustomValidity(details[key] || !inputs[key].required ? '' : 'Please enter a value.')
     }
     if (form.reportValidity()) finish(details)
   }

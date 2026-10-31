@@ -7,7 +7,7 @@ import {
 import { captureKeyPoint, durationFor, isSupported } from '../../../shared/reducers/shot-generator/dynamic-board'
 
 const DynamicBoard = ({ motion, playback, objects, evaluated, board, dispatch, onSave, onInsert, renderView }) => {
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(true)
   const panelRef = useRef()
   const gesture = useRef()
   const [layout, setLayout] = useState(null)

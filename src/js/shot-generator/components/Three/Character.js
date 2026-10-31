@@ -65,9 +65,12 @@ const Character = React.memo(({ path, sceneObject, modelSettings, isSelected, se
     const boneRotationControl = useRef(null)
     const isIkCharacter = useRef(null)
     useEffect(() => {
+      const character = ref.current
       return () => {
-        ref.current.remove(SGIkHelper.getInstance())
-        ref.current.remove(BonesHelper.getInstance())
+        if (character) {
+          character.remove(SGIkHelper.getInstance())
+          character.remove(BonesHelper.getInstance())
+        }
         if(boneRotationControl.current)
           boneRotationControl.current.deselectObject()
       }
@@ -175,13 +178,17 @@ const Character = React.memo(({ path, sceneObject, modelSettings, isSelected, se
     }, [skeleton, sceneObject.skeleton, ready])
 
     useEffect(() => {
+      // React clears the group ref before passive unmount cleanup runs.
+      const character = ref.current
       return () => {
         SGIkHelper.getInstance().cleanUpCharacter()
-        ref.current.remove(BonesHelper.getInstance())
-        ref.current.remove(SGIkHelper.getInstance())
-        boneRotationControl.current.cleanUp()
+        if (character) {
+          character.remove(BonesHelper.getInstance())
+          character.remove(SGIkHelper.getInstance())
+        }
+        if (boneRotationControl.current) boneRotationControl.current.cleanUp()
         boneRotationControl.current = null
-        if(props.objectRotationControl && props.objectRotationControl.isSelected(ref.current)) {
+        if(character && props.objectRotationControl && props.objectRotationControl.isSelected(character)) {
           props.objectRotationControl.deselectObject()
         }
         if(!lod) return

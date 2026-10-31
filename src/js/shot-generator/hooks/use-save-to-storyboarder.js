@@ -7,6 +7,7 @@ import {
   getHash,
   getMotion,
   getSceneObjects,
+  getActiveCamera,
   getEvaluatedSceneObjects,
   setMotionPlayback,
   getWorld,
@@ -126,7 +127,21 @@ const saveShot = (insert, shotRenderer, cameraPlotRenderer, largeCanvasData, sma
   try {
     if (insert && needsPlan) {
       dispatch(setMotionPlayback({ playing: false }))
-      topPlanDetails = await chooseTopPlanDetails({ ...topPlanDetails, planType: motion ? 'dynamic' : 'static' })
+      const objects = getSceneObjects(original)
+      const camera = objects[getActiveCamera(original)]
+      // Use the same lens conversion as the Shot Generator camera inspector.
+      const lens = camera && new THREE.PerspectiveCamera(camera.fov, 2.348927875243665).getFocalLength()
+      const measurement = value => Number.isFinite(value) ? Number(value.toFixed(2)) : ''
+      topPlanDetails = await chooseTopPlanDetails({
+        ...topPlanDetails,
+        characterName: Object.values(objects)
+          .filter(object => object.type === 'character')
+          .map(object => object.name || object.displayName || 'Character')
+          .join(', '),
+        cameraHeight: measurement(camera && camera.z),
+        lens: measurement(lens),
+        planType: motion ? 'dynamic' : 'static'
+      })
       if (!topPlanDetails || cancelled()) return
       if (topPlanDetails.planType === 'dynamic' && !motion) {
         throw new Error('Select Dynamic in Board type and add at least two key points before adding a dynamic plan.')
