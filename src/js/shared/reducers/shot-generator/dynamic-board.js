@@ -12,6 +12,22 @@ const orientation = object => {
     object.type === 'camera' ? object.tilt || 0 : 0,
     object.rotation || 0, object.type === 'camera' ? object.roll || 0 : 0, 'YXZ'))
 }
+// Ease each interval consistently for transforms, lenses, and character poses.
+const easingOptions = [
+  { value: 'smooth', label: 'Smooth' },
+  { value: 'linear', label: 'Linear' },
+  { value: 'ease-in', label: 'Ease in' },
+  { value: 'ease-out', label: 'Ease out' }
+]
+const easingFor = value => easingOptions.some(option => option.value === value) ? value : 'smooth'
+const easeProgress = (value, progress) => {
+  switch (easingFor(value)) {
+    case 'linear': return progress
+    case 'ease-in': return progress * progress
+    case 'ease-out': return 1 - (1 - progress) * (1 - progress)
+    default: return progress * progress * (3 - 2 * progress)
+  }
+}
 const lens = fov => new THREE.PerspectiveCamera(fov, 2.348927875243665)
 
 // Store authored local bone rotations, never mutable runtime IK positions.
@@ -76,7 +92,7 @@ const evaluateDynamicBoard = (objects, motion, timeMs) => {
       right = key
       if (key.timeMs >= time) break
     }
-    const alpha = left === right ? 0 : (time - left.timeMs) / (right.timeMs - left.timeMs)
+    const alpha = left === right ? 0 : easeProgress(motion.easing, (time - left.timeMs) / (right.timeMs - left.timeMs))
     const a = left.objects[id], b = right.objects[id]
     const evaluated = { ...objects[id] }
     // Visibility holds until the next point; it must never fade or inherit a
@@ -161,6 +177,10 @@ const motionReducer = (state = null, action) => {
       return data
     }
     case 'SET_BOARD_MOTION': return action.payload
+    case 'SET_MOTION_EASING': {
+      if (!isSupported(state)) return state
+      return { ...state, easing: easingFor(action.payload) }
+    }
     case 'SET_MOTION_DURATION': {
       if (!isSupported(state)) return state
       return { ...state, durationMs: Math.max(durationFor(action.payload), ...state.keyPoints.map(key => key.timeMs)) }
@@ -190,4 +210,4 @@ const motionReducer = (state = null, action) => {
     default: return state
   }
 }
-module.exports = { isAnimatedObject, seedMotionTargets, recordTransformEdit, isSupported, durationFor, captureKeyPoint, evaluateDynamicBoard, motionReducer }
+module.exports = { easingOptions, easingFor, isAnimatedObject, seedMotionTargets, recordTransformEdit, isSupported, durationFor, captureKeyPoint, evaluateDynamicBoard, motionReducer }

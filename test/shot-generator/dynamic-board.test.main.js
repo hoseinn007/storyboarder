@@ -30,6 +30,33 @@ const makeStore = () => {
 }
 
 describe('dynamic boards', () => {
+  it('eases movement between points with Smooth as the default', () => {
+    const motion = createMotion()
+    const samples = { smooth: 1.5625, linear: 2.5, 'ease-in': 0.625, 'ease-out': 4.375 }
+    near(evaluateDynamicBoard(objects(), motion, 500).camera.x, samples.smooth)
+    for (const [easing, expected] of Object.entries(samples)) {
+      const eased = { ...motion, easing }
+      near(evaluateDynamicBoard(objects(), eased, 500).camera.x, expected)
+      near(evaluateDynamicBoard(objects(), eased, 0).camera.x, 0)
+      near(evaluateDynamicBoard(objects(), eased, 2000).camera.x, 10)
+    }
+    near(evaluateDynamicBoard(objects(), { ...motion, easing: 'unknown' }, 500).camera.x, samples.smooth)
+  })
+  it('saves easing and supports undo and redo without changing keys', () => {
+    const store = makeStore()
+    store.dispatch(sg.setBoardMotion(createMotion()))
+    store.dispatch(sg.markSaved())
+    const keys = sg.getMotion(store.getState()).keyPoints
+    store.dispatch(sg.setMotionEasing('ease-out'))
+    assert.strictEqual(sg.getMotion(store.getState()).keyPoints, keys)
+    assert.equal(sg.getIsSceneDirty(store.getState()), true)
+    store.dispatch(ActionCreators.undo())
+    assert.equal(sg.getMotion(store.getState()).easing, undefined)
+    store.dispatch(ActionCreators.redo())
+    store.dispatch(sg.loadScene(JSON.parse(JSON.stringify(sg.getSerializedState(store.getState())))))
+    assert.equal(sg.getMotion(store.getState()).easing, 'ease-out')
+    near(evaluateDynamicBoard(objects(), sg.getMotion(store.getState()), 500).camera.x, 4.375)
+  })
   it('interpolates camera and character movement without modifying source objects', () => {
     const base = objects()
     const result = evaluateDynamicBoard(base, createMotion(), 1000)

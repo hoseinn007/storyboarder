@@ -41,6 +41,15 @@ describe('dynamic board authoring (renderer)', () => {
     act(() => { ReactRoot.unmount(root) })
     root.remove(); window.requestAnimationFrame = raf; window.cancelAnimationFrame = cancel
   })
+  it('offers animation easing with Smooth selected by default', () => {
+    changeType('dynamic')
+    const select = root.querySelector('[aria-label="Animation easing"]')
+    assert.equal(select.value, 'smooth')
+    assert.deepEqual(Array.from(select.options).map(option => option.textContent), ['Smooth', 'Linear', 'Ease in', 'Ease out'])
+    act(() => Simulate.change(select, { target: { value: 'ease-in' } }))
+    assert.equal(sg.getMotion(store.getState()).easing, 'ease-in')
+    assert.equal(select.value, 'ease-in')
+  })
   it('keeps hide/show visible and allows moving and resizing without editing the shot', async () => {
     const style = document.createElement('style')
     style.textContent = '.dynamic-board {position:absolute}'

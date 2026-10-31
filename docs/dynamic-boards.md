@@ -46,6 +46,8 @@ Top-plan boards store `renderView: 'top-plan'` inside `board.sg.data`; their cam
 
 Select a character, open the pose tab, and click the small **⤢** button beside the pose search. A large, scrollable gallery opens with bigger thumbnails and search by name or keyword. Click a thumbnail to apply the pose and close the gallery. **Close** or **Escape** dismisses it without selecting a pose. In a dynamic board, choosing a pose records it at the selected time. Body and hand poses remain independent between key points. Static boards retain their usual posing behavior.
 
+**Animation easing** in Dynamic settings controls movement between every pair of key points, including camera rotation, lens changes, and character poses. **Smooth** (the default) gently accelerates and decelerates; **Linear** keeps a constant rate, **Ease in** starts slowly, and **Ease out** finishes slowly. The choice is saved with the board and applies to previews and rendered clips; save the dynamic board again to update its clip. Older boards without an easing setting also use Smooth. Visibility still changes instantly at key points.
+
 The dynamic controls float over the viewport on a translucent background. Use the blue **Hide/Show** arrow button in the header to collapse or reopen the box; hiding it does not stop playback or change key points. Drag the **Dynamic settings** header to move the box. Drag its right edge, bottom edge, or visible bottom-right grip to resize it; the contents scroll while the header stays visible. Their text and buttons remain opaque for readability. Saved stills and clips come directly from the Three.js renderer and never contain this panel.
 
 Older dynamic boards did not store per-key poses or visibility. Their existing global values are used as the initial fallback; assign the intended poses and visibility to their key points once to establish distinct values.
@@ -58,6 +60,7 @@ The optional `board.sg.data.motion` object contains:
 {
   schemaVersion: 1,
   durationMs: 2000,
+  easing: 'smooth', // smooth (default), linear, ease-in, or ease-out
   keyPoints: [
     { timeMs: 0, objects: {
       cameraId: { type: 'camera', x: 0, y: 6, z: 1,

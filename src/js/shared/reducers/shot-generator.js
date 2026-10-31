@@ -1755,6 +1755,7 @@ module.exports = {
   getEvaluatedSceneObjects,
   setMotionPlayback: payload => ({ type: 'SET_MOTION_PLAYBACK', payload }),
   setBoardMotion: payload => ({ type: 'SET_BOARD_MOTION', payload }),
+  setMotionEasing: payload => ({ type: 'SET_MOTION_EASING', payload }),
   setMotionDuration: payload => ({ type: 'SET_MOTION_DURATION', payload }),
   setMotionKey: payload => ({ type: 'SET_MOTION_KEY', payload }),
   deleteMotionKey: payload => ({ type: 'DELETE_MOTION_KEY', payload }),

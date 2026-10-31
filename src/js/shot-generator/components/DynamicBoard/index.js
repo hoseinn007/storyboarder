@@ -2,9 +2,9 @@ import React, { useEffect, useState, useRef, useLayoutEffect } from 'react'
 import { connect } from 'react-redux'
 import {
   getMotion, getSceneObjects, getEvaluatedSceneObjects, setBoardMotion,
-  setMotionPlayback, setMotionDuration, setMotionKey, deleteMotionKey, moveMotionKey
+  setMotionPlayback, setMotionDuration, setMotionEasing, setMotionKey, deleteMotionKey, moveMotionKey
 } from '../../../shared/reducers/shot-generator'
-import { captureKeyPoint, durationFor, isSupported } from '../../../shared/reducers/shot-generator/dynamic-board'
+import { captureKeyPoint, durationFor, isSupported, easingOptions, easingFor } from '../../../shared/reducers/shot-generator/dynamic-board'
 
 const DynamicBoard = ({ motion, playback, objects, evaluated, board, dispatch, onSave, onInsert, renderView }) => {
   const [collapsed, setCollapsed] = useState(true)
@@ -108,10 +108,14 @@ const DynamicBoard = ({ motion, playback, objects, evaluated, board, dispatch, o
       <label>Board type <select aria-label="Board type" disabled={playback.rendering || (motion && !supported)}
         value={motion ? 'dynamic' : 'static'} onChange={event => {
           dispatch(setBoardMotion(event.target.value === 'dynamic'
-            ? { schemaVersion: 1, durationMs: duration, keyPoints: [captureKeyPoint(objects, 0)] } : null))
+            ? { schemaVersion: 1, easing: 'smooth', durationMs: duration, keyPoints: [captureKeyPoint(objects, 0)] } : null))
           dispatch(setMotionPlayback({ timeMs: 0, playing: false, preview: false }))
         }}><option value="static">Static</option><option value="dynamic">Dynamic</option></select></label>
       {motion && <strong>{renderView === 'top-plan' ? 'Top-plan animation' : 'Camera, character + object animation'}</strong>}
+      {supported && <label>Animation easing <select aria-label="Animation easing" disabled={playback.rendering}
+        value={easingFor(motion.easing)} onChange={event => dispatch(setMotionEasing(event.target.value))}>
+        {easingOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+      </select></label>}
       {supported && <label>Duration (s) <input aria-label="Dynamic board duration" type="number" min="0.001" step="0.1"
         value={duration / 1000} onChange={event => {
           if (Number(event.target.value) > 0) dispatch(setMotionDuration(Number(event.target.value) * 1000))
