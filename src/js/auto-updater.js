@@ -38,6 +38,7 @@ const init = () => {
         resizable: false,
         backgroundColor: '#E5E5E5',
         webPreferences: {
+          preload: require('path').resolve(__dirname, 'window/normalize-digits-preload.js'),
           nodeIntegration: true,
           devTools: true,
           contextIsolation: false

@@ -6715,6 +6715,7 @@ const showSignInWindow = () => {
     frame: false,
     modal: true,
     webPreferences: {
+      preload: require('path').resolve(__dirname, 'normalize-digits-preload.js'),
       webgl: true,
       experimentalFeatures: true,
       experimentalCanvasFeatures: true,
@@ -7113,6 +7114,7 @@ ipcRenderer.on('importWorksheets', (event, args) => {
       frame: false,
       modal: true,
       webPreferences: {
+        preload: require('path').resolve(__dirname, 'normalize-digits-preload.js'),
         nodeIntegration: true,
         contextIsolation: false
       }

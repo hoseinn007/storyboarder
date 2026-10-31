@@ -28,6 +28,7 @@ const show = async ({ parent }) => {
     modal: true,
 
     webPreferences: {
+      preload: require('path').resolve(__dirname, '../../window/normalize-digits-preload.js'),
       nodeIntegration: true,
       contextIsolation: false,
       contextIsolation: false

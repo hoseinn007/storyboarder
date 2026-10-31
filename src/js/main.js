@@ -380,6 +380,7 @@ let openKeyCommandWindow = () => {
     frame: false,
     titleBarStyle: 'hiddenInset',
     webPreferences: {
+      preload: require('path').resolve(__dirname, 'window/normalize-digits-preload.js'),
       nodeIntegration: true,
       contextIsolation: false
     }
@@ -417,6 +418,7 @@ let openNewWindow = () => {
       frame: false,
       modal: true,
       webPreferences: {
+        preload: require('path').resolve(__dirname, 'window/normalize-digits-preload.js'),
         nodeIntegration: true,
         contextIsolation: false
       }
@@ -444,6 +446,7 @@ let openWelcomeWindow = () => {
     resizable: false,
     frame: false,
     webPreferences: {
+      preload: require('path').resolve(__dirname, 'window/normalize-digits-preload.js'),
       webSecurity: false,
       nodeIntegration: true,
       contextIsolation: false
@@ -461,6 +464,7 @@ let openWelcomeWindow = () => {
     frame: false,
     modal: true,
     webPreferences: {
+      preload: require('path').resolve(__dirname, 'window/normalize-digits-preload.js'),
       nodeIntegration: true,
       contextIsolation: false
     }
@@ -1025,6 +1029,7 @@ let loadStoryboarderWindow = (filename, scriptData, locations, characters, board
     resizable: true,
     titleBarStyle: 'hiddenInset',
     webPreferences: {
+      preload: require('path').resolve(__dirname, 'window/normalize-digits-preload.js'),
       webgl: true,
       experimentalFeatures: true,
       experimentalCanvasFeatures: true,
@@ -1045,6 +1050,7 @@ let loadStoryboarderWindow = (filename, scriptData, locations, characters, board
     frame: false,
     resizable: isDev ? true : false,
     webPreferences: {
+      preload: require('path').resolve(__dirname, 'window/normalize-digits-preload.js'),
       nodeIntegration: true,
       contextIsolation: false
     }

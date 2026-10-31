@@ -47,6 +47,7 @@ const createWindow = async ( onComplete) => {
       acceptFirstMouse: true,
       simpleFullscreen: true,
       webPreferences: {
+        preload: require('path').resolve(__dirname, '../../window/normalize-digits-preload.js'),
         nodeIntegration: true,
         plugins: true,
         webSecurity: false,

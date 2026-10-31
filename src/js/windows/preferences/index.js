@@ -18,6 +18,7 @@ module.exports = () => {
       resizable: false,
       backgroundColor: '#E5E5E5',
       webPreferences: {
+        preload: require('path').resolve(__dirname, '../../window/normalize-digits-preload.js'),
         devTools: true,
         nodeIntegration: true,
         contextIsolation: false

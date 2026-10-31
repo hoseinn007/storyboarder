@@ -36,6 +36,7 @@ const show = () => {
     frame: true,
     modal: true,
     webPreferences: {
+      preload: require('path').resolve(__dirname, '../../window/normalize-digits-preload.js'),
       nodeIntegration: true,
       devTools: true,
       contextIsolation: false
