@@ -1,3 +1,7 @@
+.transport-control {
+  cursor: pointer;
+}
+
 .transport-control svg {
   pointer-events: none;
 }

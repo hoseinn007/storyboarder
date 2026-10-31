@@ -975,6 +975,10 @@ input[type=range]:focus::-webkit-slider-runnable-track {
   border-bottom-right-radius: 6px;
 }
 
+#timeline-mode-control-view .btn {
+  cursor: pointer;
+}
+
 #timeline-mode-control-view .btn.selected {
   background-color: #555555;
 }
