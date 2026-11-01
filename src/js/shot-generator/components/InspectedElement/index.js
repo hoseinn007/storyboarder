@@ -1,4 +1,4 @@
-import React, {useMemo, useState} from 'react'
+import React, {useEffect, useMemo, useRef, useState} from 'react'
 import {connect} from 'react-redux'
 import { useTranslation } from 'react-i18next'
 
@@ -32,7 +32,35 @@ const nullTab = {tab: null, panel: null}
 const Inspector = React.memo(({id, selectedName, selectedType, updateObject}) => {
   const { t } = useTranslation()
   const [isModalShown, showModal] = useState(false)
-  const [changedName, changeNameTo] = useState(false)
+  const [changedName, changeNameTo] = useState('')
+  const nameInput = useRef(null)
+
+  useEffect(() => { showModal(false) }, [id])
+
+  useEffect(() => {
+    if (!isModalShown) return
+    // Focus after Modal's mount effect, which blurs the active element.
+    const frame = requestAnimationFrame(() => {
+      if (nameInput.current) nameInput.current.focus()
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [isModalShown])
+
+  const openRename = (event) => {
+    event.preventDefault()
+    changeNameTo(selectedName || '')
+    showModal(true)
+  }
+
+  const saveName = (event) => {
+    event.preventDefault()
+    const name = changedName.trim()
+    if (!name) return
+    if (name !== selectedName) updateObject(id, { name })
+    showModal(false)
+  }
+
+  const renameLabel = t('shot-generator.inspector.inspected-element.rename', 'Rename')
   const handPoseTab = useMemo(() => {
     if (!isChar(selectedType)) return nullTab
 
@@ -91,30 +119,42 @@ const Inspector = React.memo(({id, selectedName, selectedType, updateObject}) =>
   return (
     <React.Fragment>
       { isModalShown && <Modal visible={ isModalShown } onClose={() => showModal(false)}>
-        <div style={{ margin:"5px 5px 5px 5px" }}>
-        {t("shot-generator.inspector.common.select-preset-name")}
-        </div>
-        <div className="column" style={{ flex: 1}}>
-          <input
-            className="modalInput"
-            type="text"
-            placeholder={ selectedName }
-            onChange={ (value) => changeNameTo(value.currentTarget.value) }/>
-        </div>
-        <div className="skeleton-selector__div">
-          <button
-            className="skeleton-selector__button"
-            onClick={() => {
-              showModal(false)
-              updateObject(id, { displayName: changedName, name: changedName })
-            }}>
-                {t("shot-generator.inspector.common.add-preset")}
-          </button>
-      </div>
+        <form onSubmit={saveName} onKeyDown={event => {
+          if (event.key === 'Escape') {
+            event.stopPropagation()
+            showModal(false)
+          }
+        }}>
+          <label htmlFor="scene-object-name">{renameLabel}</label>
+          <div className="column" style={{ flex: 1 }}>
+            <input
+              ref={nameInput}
+              id="scene-object-name"
+              className="modalInput"
+              type="text"
+              value={changedName}
+              onChange={event => changeNameTo(event.currentTarget.value)}
+              onFocus={event => event.currentTarget.select()}
+            />
+          </div>
+          <div className="skeleton-selector__div" style={{ gap: 8 }}>
+            <button type="button" className="skeleton-selector__button" onClick={() => showModal(false)}>
+              {t('shot-generator.inspector.inspected-element.cancel', 'Cancel')}
+            </button>
+            <button type="submit" className="skeleton-selector__button" disabled={!changedName.trim()}>
+              {t('shot-generator.inspector.inspected-element.save', 'Save')}
+            </button>
+          </div>
+        </form>
       </Modal> }
-      <a href="#" className="object-property-heading" style={{ overflow: "hidden", textOverflow: "ellipsis", flexShrink:0, width: 288 }} onClick={ () => showModal(true) }>
-        {selectedName} {t("shot-generator.inspector.inspected-element.properties")}
-      </a>
+      <div className="object-property-heading object-property-heading--rename">
+        <a href="#" onClick={openRename} title={selectedName}>
+          {selectedName} {t('shot-generator.inspector.inspected-element.properties')}
+        </a>
+        <button type="button" className="object-rename-button" onClick={openRename}>
+          {renameLabel}
+        </button>
+      </div>
       <Tabs key={id}>
         <div className="tabs-header">
           <Tab><Icon src="icon-tab-parameters"/></Tab>

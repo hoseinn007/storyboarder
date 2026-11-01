@@ -107,13 +107,18 @@ const Attachable = React.memo(({ path, sceneObject, isSelected, updateObject, с
 
     useEffect(() => {
       isAttachableSelected.current = false
+      // React clears refs before passive unmount cleanup. Keep the mounted
+      // attachment so it can still be removed from its character's bone.
+      const attachment = ref.current
       return () => {
         if(objectRotationControl.current) {
           objectRotationControl.current.cleanUp();
           objectRotationControl.current = null
         }
-        if(!characterObject.current || !ref.current.parent) return
-        ref.current.parent.remove(ref.current)
+        if (attachment && attachment.parent) {
+          attachment.parent.remove(attachment)
+        }
+        characterObject.current = null
       }
     }, [])
 
@@ -232,7 +237,7 @@ const Attachable = React.memo(({ path, sceneObject, isSelected, updateObject, с
     }, [meshes, isSelected])
     
     useEffect(() => {
-      if(!characterObject.current || !ref.current.parent) return
+      if(!characterObject.current || !ref.current || !ref.current.parent) return
       // 1.8 is height of default character for which attachable was placed
       let scale = getProperCharacterScale()
       ref.current.scale.set(scale, scale, scale)
@@ -240,7 +245,7 @@ const Attachable = React.memo(({ path, sceneObject, isSelected, updateObject, с
     }, [sceneObject.size, characterLOD])
 
     useEffect(() => {
-      if(!characterObject.current || !ref.current.parent) return 
+      if(!characterObject.current || !ref.current || !ref.current.parent) return
       characterObject.current.updateWorldMatrix(true, true)
       let parentMatrixWorld = ref.current.parent.matrixWorld
       let parentInverseMatrixWorld = ref.current.parent.getInverseMatrixWorld()
@@ -253,7 +258,7 @@ const Attachable = React.memo(({ path, sceneObject, isSelected, updateObject, с
     }, [sceneObject.x, sceneObject.y, sceneObject.z, characterLOD])
     
     useEffect(() => {
-      if(!characterObject.current || !ref.current.parent) return 
+      if(!characterObject.current || !ref.current || !ref.current.parent) return
       characterObject.current.updateWorldMatrix(true, true)
       let parentMatrixWorld = ref.current.parent.matrixWorld
       let parentInverseMatrixWorld = ref.current.parent.getInverseMatrixWorld()

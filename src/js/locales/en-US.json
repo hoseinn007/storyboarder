@@ -434,7 +434,10 @@
         "are-you-sure": "Are you sure?"
       },
       "inspected-element": {
-        "properties": "Properties:"
+        "properties": "Properties:",
+        "rename": "Rename",
+        "save": "Save",
+        "cancel": "Cancel"
       },
       "camera": {
         "fov": "F.O.V."

@@ -1132,6 +1132,46 @@ input[type="color"]::-webkit-color-swatch {
   color: rgba(255,255,255,0.4);
 }
 
+
+/* The inspector's direct div children otherwise receive height: 100%. */
+#inspector > .object-property-heading--rename {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  height: auto;
+  min-height: 26px;
+  width: 100%;
+  min-width: 0;
+}
+
+.object-property-heading--rename > a {
+  flex: 1;
+  min-width: 0;
+  color: inherit;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.object-property-heading--rename > .object-rename-button {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+  background: #45494d;
+  cursor: pointer;
+}
+
+.object-property-heading--rename > .object-rename-button:hover,
+.object-property-heading--rename > .object-rename-button:focus-visible {
+  background: #565c62;
+}
+
 div.fatal-error-screen {
   background: #26292b;
   margin: 50px 25px;
